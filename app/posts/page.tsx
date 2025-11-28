@@ -4,9 +4,7 @@
 
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { useAuthStore } from "@/lib/store";
+import { useState, useCallback } from "react";
 import { useDeletePost } from "@/features/posts/hooks";
 import {
   PostsTable,
@@ -18,9 +16,6 @@ import { ErrorBoundary } from "@/components/error";
 import type { Post, PostCategory } from "@/types/post";
 
 export default function PostsPage() {
-  const router = useRouter();
-  const { isAuthenticated } = useAuthStore();
-
   // 검색 및 필터 상태
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState<PostCategory | "">("");
@@ -37,12 +32,12 @@ export default function PostsPage() {
 
   const deletePost = useDeletePost();
 
-  // 미인증 사용자는 로그인 페이지로 리다이렉트
-  useEffect(() => {
-    if (!isAuthenticated) {
-      router.push("/login");
-    }
-  }, [isAuthenticated, router]);
+  // 미들웨어에서 이미 인증 체크를 하므로 클라이언트 사이드 체크는 불필요
+  // useEffect(() => {
+  //   if (!isAuthenticated) {
+  //     router.push("/login");
+  //   }
+  // }, [isAuthenticated, router]);
 
   const handleCreatePost = () => {
     setEditingPost(null);
@@ -79,16 +74,16 @@ export default function PostsPage() {
     category: category || undefined,
   };
 
-  // 로딩 상태 표시
-  if (!isAuthenticated) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-gray-50 dark:bg-gray-900">
-        <div className="text-gray-500 dark:text-gray-400">
-          로그인 페이지로 이동 중...
-        </div>
-      </div>
-    );
-  }
+  // 미들웨어에서 이미 인증 체크를 하므로 이 부분도 불필요
+  // if (!isAuthenticated) {
+  //   return (
+  //     <div className="flex min-h-screen items-center justify-center bg-gray-50 dark:bg-gray-900">
+  //       <div className="text-gray-500 dark:text-gray-400">
+  //         로그인 페이지로 이동 중...
+  //       </div>
+  //     </div>
+  //   );
+  // }
 
   return (
     <ErrorBoundary>

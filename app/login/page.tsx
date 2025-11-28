@@ -36,7 +36,7 @@ export default function LoginPage() {
   // 이미 로그인된 경우 리다이렉트
   useEffect(() => {
     if (isAuthenticated) {
-      const redirect = searchParams.get("redirect") || "/dashboard";
+      const redirect = searchParams.get("redirect") || "/";
       router.push(redirect);
     }
   }, [isAuthenticated, router, searchParams]);
@@ -54,8 +54,8 @@ export default function LoginPage() {
         description: `${response.user.email}님, 환영합니다!`,
       });
 
-      // 리다이렉트 URL이 있으면 해당 페이지로, 없으면 대시보드로
-      const redirect = searchParams.get("redirect") || "/dashboard";
+      // 리다이렉트 URL이 있으면 해당 페이지로, 없으면 홈으로
+      const redirect = searchParams.get("redirect") || "/";
       router.push(redirect);
     } catch (err: unknown) {
       let errorMessage = "로그인에 실패했습니다.";

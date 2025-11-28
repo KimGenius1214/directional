@@ -11,12 +11,14 @@ interface AuthStore extends AuthState {
   logout: () => void;
   setToken: (token: string) => void;
   initializeAuth: () => void;
+  isInitialized: boolean;
 }
 
 export const useAuthStore = create<AuthStore>()((set) => ({
   token: null,
   user: null,
   isAuthenticated: false,
+  isInitialized: false,
 
   login: (token, user) => {
     // 쿠키에 저장
@@ -60,6 +62,11 @@ export const useAuthStore = create<AuthStore>()((set) => ({
         token,
         user: { id: userId, email: "" }, // 이메일은 필요시 API로 가져오기
         isAuthenticated: true,
+        isInitialized: true,
+      });
+    } else {
+      set({
+        isInitialized: true,
       });
     }
   },
