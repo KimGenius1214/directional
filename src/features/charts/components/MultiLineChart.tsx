@@ -4,6 +4,7 @@
 
 "use client";
 
+import { useState } from "react";
 import {
   LineChart,
   Line,
@@ -41,42 +42,98 @@ interface MultiLineChartProps {
   chartId: string;
 }
 
-interface TooltipPayload {
-  color: string;
-  dataKey: string;
-  name: string;
-  value: number;
-  payload?: {
-    team?: string;
-  };
-}
-
-interface CustomTooltipProps {
+const CustomTooltip = ({
+  active,
+  payload,
+  label,
+  xAxisLabel,
+  hoveredLineKey,
+  lines,
+}: {
   active?: boolean;
-  payload?: TooltipPayload[];
+  payload?: Array<{
+    color?: string;
+    dataKey?: string | number;
+    name?: string | number;
+    value?: unknown;
+    payload?: Record<string, unknown>;
+  }>;
   label?: string | number;
-}
+  xAxisLabel?: string;
+  hoveredLineKey?: string | null;
+  lines?: LineConfig[];
+}) => {
+  // hoveredLineKey가 없으면 툴팁 표시 안 함
+  if (!active || !payload || !payload.length || !hoveredLineKey || !lines)
+    return null;
 
-const CustomTooltip = ({ active, payload, label }: CustomTooltipProps) => {
-  if (!active || !payload || !payload.length) return null;
+  // 모든 payload 항목을 확인하여 실제 값이 있는 항목들만 필터링
+  const validPayloads = payload.filter(
+    (p) => p.value !== undefined && p.value !== null
+  );
 
-  // 같은 팀의 데이터만 표시
-  const team = payload[0]?.payload?.team;
-  const teamData = payload.filter((p) => p.payload?.team === team);
+  if (validPayloads.length === 0) return null;
 
-  if (teamData.length === 0) return null;
+  // 호버한 라인의 정보 찾기
+  const hoveredLine = lines.find(
+    (line) => `${line.team}-${line.key}` === hoveredLineKey
+  );
+
+  if (!hoveredLine) return null;
+
+  // 호버한 라인의 데이터만 찾기
+  const hoveredData = validPayloads.find((item) => {
+    const dataKey = String(item.dataKey);
+    return dataKey === hoveredLineKey;
+  });
+
+  if (!hoveredData) return null;
+
+  // 팀명과 필드명 추출
+  const [teamName, fieldName] = hoveredLineKey.split("-");
+
+  // 필드명을 한글로 변환
+  const getKoreanName = (field: string) => {
+    switch (field) {
+      case "bugs":
+        return "버그 수";
+      case "productivity":
+        return "생산성";
+      case "meetingsMissed":
+        return "회의불참";
+      case "morale":
+        return "사기";
+      default:
+        return field;
+    }
+  };
+
+  const koreanName = getKoreanName(fieldName);
 
   return (
-    <div className="rounded-lg border border-gray-200 bg-white p-3 shadow-lg dark:border-gray-700 dark:bg-gray-800">
-      <p className="mb-2 font-semibold text-gray-900 dark:text-white">{team}</p>
-      <p className="mb-1 text-sm text-gray-600 dark:text-gray-400">
-        {`${payload[0]?.name}: ${label}`}
+    <div
+      className="rounded-lg border border-gray-200 bg-white p-3 shadow-lg dark:border-gray-700 dark:bg-gray-800 max-w-xs transition-opacity duration-200 ease-in-out"
+      style={{
+        opacity: 1,
+      }}
+    >
+      <p className="mb-2 text-sm text-gray-600 dark:text-gray-400">
+        {xAxisLabel}: <span className="font-semibold">{label}</span>
       </p>
-      {teamData.map((entry, index: number) => (
-        <p key={index} className="text-sm" style={{ color: entry.color }}>
-          {`${entry.dataKey}: ${entry.value}`}
+      <div>
+        <p className="mb-1 font-bold text-gray-900 dark:text-white text-sm">
+          {teamName}
         </p>
-      ))}
+        <div className="pl-2">
+          <p
+            className="text-xs font-medium"
+            style={{ color: hoveredData.color }}
+          >
+            {koreanName}:{" "}
+            <span className="font-bold">{Number(hoveredData.value)}</span>
+          </p>
+        </div>
+      </div>
     </div>
   );
 };
@@ -90,6 +147,8 @@ export default function MultiLineChart({
   lines,
   chartId,
 }: MultiLineChartProps) {
+  const [hoveredLineKey, setHoveredLineKey] = useState<string | null>(null);
+
   const { legendItems, toggleItem, updateColor } = useChartLegend(
     chartId,
     lines.map((line) => ({
@@ -216,8 +275,51 @@ export default function MultiLineChart({
             stroke="#9ca3af"
             width={70}
           />
-          <Tooltip content={<CustomTooltip />} />
+          <Tooltip
+            animationDuration={0}
+            isAnimationActive={false}
+            content={(props) => (
+              <CustomTooltip
+                {...props}
+                xAxisLabel={xAxisLabel}
+                hoveredLineKey={hoveredLineKey}
+                lines={lines}
+              />
+            )}
+          />
           <Legend content={() => null} />
+          {/* 먼저 투명한 두꺼운 선들을 모두 렌더링 (호버 영역) */}
+          {lines.map((line) => {
+            const legendKey = `${line.team}-${line.key}`;
+            const legendItem = legendItems[legendKey];
+            if (!legendItem || !legendItem.visible) return null;
+
+            const dataKey = `${line.team}-${line.key}`;
+
+            return (
+              <Line
+                key={`${legendKey}-hover`}
+                type="monotone"
+                dataKey={dataKey}
+                stroke={legendItem.color}
+                strokeOpacity={0}
+                strokeWidth={15}
+                yAxisId={line.yAxisId}
+                dot={false}
+                activeDot={false}
+                connectNulls
+                onMouseEnter={() => {
+                  setHoveredLineKey(legendKey);
+                }}
+                onMouseLeave={() => {
+                  setHoveredLineKey(null);
+                }}
+                style={{ cursor: "pointer" }}
+                isAnimationActive={false}
+              />
+            );
+          })}
+          {/* 그 다음 실제 보이는 선들을 렌더링 */}
           {lines.map((line) => {
             const legendKey = `${line.team}-${line.key}`;
             const legendItem = legendItems[legendKey];
@@ -226,24 +328,90 @@ export default function MultiLineChart({
             // 병합된 데이터의 키는 "팀명-필드명" 형태
             const dataKey = `${line.team}-${line.key}`;
 
+            // shape에 따라 다른 마커 표시
+            // circle (원형) → 실선 라인 (bugs, meetingMissed)
+            // square (사각형) → 점선 라인 (productivity, morale)
+            const dotShape =
+              line.shape === "square"
+                ? (props: { cx: number; cy: number; index?: number }) => {
+                    const { cx, cy, index } = props;
+                    return (
+                      <rect
+                        key={`dot-${dataKey}-${index}`}
+                        x={cx - 6}
+                        y={cy - 6}
+                        width={12}
+                        height={12}
+                        fill={legendItem.color}
+                        stroke="#fff"
+                        strokeWidth={2}
+                      />
+                    );
+                  }
+                : {
+                    fill: legendItem.color,
+                    r: 6,
+                    strokeWidth: 2,
+                    stroke: "#fff",
+                  };
+
+            const activeDotShape =
+              line.shape === "square"
+                ? (props: { cx: number; cy: number; index?: number }) => {
+                    const { cx, cy, index } = props;
+                    return (
+                      <rect
+                        key={`active-dot-${dataKey}-${index}`}
+                        x={cx - 8}
+                        y={cy - 8}
+                        width={16}
+                        height={16}
+                        fill={legendItem.color}
+                        stroke="#fff"
+                        strokeWidth={3}
+                      />
+                    );
+                  }
+                : {
+                    r: 8,
+                    fill: legendItem.color,
+                    stroke: "#fff",
+                    strokeWidth: 3,
+                  };
+
             return (
               <Line
                 key={legendKey}
                 type="monotone"
                 dataKey={dataKey}
                 stroke={legendItem.color}
-                strokeWidth={2}
+                strokeWidth={3}
                 strokeDasharray={line.strokeDasharray}
                 yAxisId={line.yAxisId}
                 name={legendItem.label || line.label}
-                dot={{
-                  fill: legendItem.color,
-                  r: 4,
-                  strokeWidth: 2,
-                  stroke: "#fff",
+                dot={dotShape}
+                activeDot={{
+                  ...activeDotShape,
+                  onMouseEnter: () => {
+                    // console.log("🎯 마커 호버:", line.team);
+                    setHoveredLineKey(legendKey);
+                  },
+                  onMouseLeave: () => {
+                    // console.log("🎯 마커 leave");
+                    setHoveredLineKey(null);
+                  },
                 }}
-                activeDot={{ r: 6 }}
                 connectNulls
+                onMouseEnter={() => {
+                  // console.log("📍 라인 호버:", line.team);
+                  setHoveredLineKey(legendKey);
+                }}
+                onMouseLeave={() => {
+                  // console.log("📍 라인 leave");
+                  setHoveredLineKey(null);
+                }}
+                style={{ cursor: "pointer" }}
+                isAnimationActive={true}
               />
             );
           })}

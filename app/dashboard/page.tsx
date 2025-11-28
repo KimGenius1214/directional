@@ -469,6 +469,7 @@ export default function DashboardPage() {
                             label: "Frontend - 버그",
                             yAxisId: "left",
                             strokeDasharray: undefined,
+                            shape: "circle",
                           },
                           {
                             key: "productivity",
@@ -477,6 +478,7 @@ export default function DashboardPage() {
                             label: "Frontend - 생산성",
                             yAxisId: "right",
                             strokeDasharray: "5 5",
+                            shape: "square",
                           },
                           // Backend 팀
                           {
@@ -486,6 +488,7 @@ export default function DashboardPage() {
                             label: "Backend - 버그",
                             yAxisId: "left",
                             strokeDasharray: undefined,
+                            shape: "circle",
                           },
                           {
                             key: "productivity",
@@ -494,6 +497,7 @@ export default function DashboardPage() {
                             label: "Backend - 생산성",
                             yAxisId: "right",
                             strokeDasharray: "5 5",
+                            shape: "square",
                           },
                           // AI 팀
                           {
@@ -503,6 +507,7 @@ export default function DashboardPage() {
                             label: "AI - 버그",
                             yAxisId: "left",
                             strokeDasharray: undefined,
+                            shape: "circle",
                           },
                           {
                             key: "productivity",
@@ -511,6 +516,7 @@ export default function DashboardPage() {
                             label: "AI - 생산성",
                             yAxisId: "right",
                             strokeDasharray: "5 5",
+                            shape: "square",
                           },
                         ]}
                         chartId="coffee-consumption"
@@ -550,6 +556,7 @@ export default function DashboardPage() {
                             label: "Marketing - 회의불참",
                             yAxisId: "left",
                             strokeDasharray: undefined,
+                            shape: "circle",
                           },
                           {
                             key: "morale",
@@ -558,6 +565,7 @@ export default function DashboardPage() {
                             label: "Marketing - 사기",
                             yAxisId: "right",
                             strokeDasharray: "5 5",
+                            shape: "square",
                           },
                           // Sales 팀
                           {
@@ -567,6 +575,7 @@ export default function DashboardPage() {
                             label: "Sales - 회의불참",
                             yAxisId: "left",
                             strokeDasharray: undefined,
+                            shape: "circle",
                           },
                           {
                             key: "morale",
@@ -575,6 +584,7 @@ export default function DashboardPage() {
                             label: "Sales - 사기",
                             yAxisId: "right",
                             strokeDasharray: "5 5",
+                            shape: "square",
                           },
                           // HR 팀
                           {
@@ -584,6 +594,7 @@ export default function DashboardPage() {
                             label: "HR - 회의불참",
                             yAxisId: "left",
                             strokeDasharray: undefined,
+                            shape: "circle",
                           },
                           {
                             key: "morale",
@@ -592,6 +603,7 @@ export default function DashboardPage() {
                             label: "HR - 사기",
                             yAxisId: "right",
                             strokeDasharray: "5 5",
+                            shape: "square",
                           },
                         ]}
                         chartId="snack-impact"
