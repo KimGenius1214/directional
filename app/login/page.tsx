@@ -5,6 +5,7 @@
 "use client";
 
 import { useState, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import { useAuthStore } from "@/lib/store";
 import { authApi } from "@/lib/api/endpoints";
 import {
@@ -23,6 +24,7 @@ import { toast } from "sonner";
 
 function LoginForm() {
   const login = useAuthStore((state) => state.login);
+  const searchParams = useSearchParams();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -42,9 +44,12 @@ function LoginForm() {
         description: `${response.user.email}님, 환영합니다!`,
       });
 
+      // redirect 파라미터가 있으면 해당 경로로, 없으면 홈으로
+      const redirectPath = searchParams.get("redirect") || "/";
+
       // 쿠키가 설정될 시간을 주고 페이지 완전히 새로고침
       setTimeout(() => {
-        window.location.href = "/";
+        window.location.href = redirectPath;
       }, 100);
     } catch (err: unknown) {
       let errorMessage = "로그인에 실패했습니다.";
