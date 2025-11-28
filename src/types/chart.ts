@@ -4,17 +4,16 @@
 
 // 바 차트, 도넛 차트
 export interface BrandData {
-  brand: string;
-  count: number;
+  name?: string;
+  brand?: string;
+  share?: number;
+  popularity?: number;
 }
 
-export interface TopCoffeeBrandsResponse {
-  data: BrandData[];
-}
+// API 응답이 직접 배열 형태
+export type TopCoffeeBrandsResponse = BrandData[];
 
-export interface PopularSnackBrandsResponse {
-  data: BrandData[];
-}
+export type PopularSnackBrandsResponse = BrandData[];
 
 // 스택형 바/면적 차트
 export interface WeeklyMoodData {
@@ -31,35 +30,41 @@ export interface WeeklyWorkoutData {
   stretching: number;
 }
 
-export interface WeeklyMoodTrendResponse {
-  data: WeeklyMoodData[];
-}
+// API 응답이 직접 배열 형태
+export type WeeklyMoodTrendResponse = WeeklyMoodData[];
 
-export interface WeeklyWorkoutTrendResponse {
-  data: WeeklyWorkoutData[];
-}
+export type WeeklyWorkoutTrendResponse = WeeklyWorkoutData[];
 
 // 멀티라인 차트
-export interface CoffeeConsumptionData {
-  cupsPerDay: number;
-  team: string;
+export interface CoffeeMetric {
+  cups: number;
   bugs: number;
   productivity: number;
 }
 
-export interface SnackImpactData {
-  snackCount: number;
-  team: string;
+export interface CoffeeTeamData {
+  team: string; // ✅ 'name'이 아니라 'team'
+  series: CoffeeMetric[]; // ✅ 'metrics'가 아니라 'series'
+}
+
+export interface SnackMetric {
+  snacks: number;
   meetingsMissed: number;
   morale: number;
 }
 
+export interface SnackDepartmentData {
+  name: string;
+  metrics: SnackMetric[];
+}
+
+// API 응답이 teams/departments 구조
 export interface CoffeeConsumptionResponse {
-  data: CoffeeConsumptionData[];
+  teams: CoffeeTeamData[];
 }
 
 export interface SnackImpactResponse {
-  data: SnackImpactData[];
+  departments: SnackDepartmentData[];
 }
 
 // 범례 상태 관리
@@ -75,4 +80,3 @@ export interface ChartLegendState {
     [dataKey: string]: LegendItem;
   };
 }
-

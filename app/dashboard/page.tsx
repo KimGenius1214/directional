@@ -8,47 +8,94 @@ import { Sidebar } from "@/components/layout";
 import {
   useTopCoffeeBrands,
   usePopularSnackBrands,
+  useWeeklyMoodTrend,
+  useWeeklyWorkoutTrend,
+  useCoffeeConsumption,
+  useSnackImpact,
 } from "@/features/charts/hooks";
 import {
   ChartCard,
   SimpleBarChart,
   SimpleDonutChart,
+  StackedBarChart,
+  StackedAreaChart,
+  MultiLineChart,
 } from "@/features/charts/components";
 
 export default function DashboardPage() {
   // 차트 데이터 조회
   const coffeeBrands = useTopCoffeeBrands();
   const snackBrands = usePopularSnackBrands();
+  const moodTrend = useWeeklyMoodTrend();
+  const workoutTrend = useWeeklyWorkoutTrend();
+  const coffeeConsumption = useCoffeeConsumption();
+  const snackImpact = useSnackImpact();
+
+  // 멀티라인 차트 데이터 변환
+  const coffeeConsumptionData = coffeeConsumption.data?.teams
+    ? coffeeConsumption.data.teams
+        .filter((team) => {
+          console.log("🔍 Filtering coffee team:", team);
+          return team.series && Array.isArray(team.series);
+        })
+        .flatMap((team) => {
+          console.log(`📝 Mapping team ${team.team}, series:`, team.series);
+          return team.series.map((metric) => ({
+            cupsPerDay: metric.cups,
+            bugs: metric.bugs,
+            productivity: metric.productivity,
+            team: team.team,
+          }));
+        })
+    : [];
+
+  const snackImpactData = snackImpact.data?.departments
+    ? snackImpact.data.departments
+        .filter((dept) => dept.metrics && Array.isArray(dept.metrics))
+        .flatMap((dept) =>
+          dept.metrics.map((metric) => ({
+            snackCount: metric.snacks,
+            meetingsMissed: metric.meetingsMissed,
+            morale: metric.morale,
+            team: dept.name,
+          }))
+        )
+    : [];
 
   // 디버깅
-  console.log("📊 Dashboard - Coffee Brands:", {
-    isLoading: coffeeBrands.isLoading,
-    isError: coffeeBrands.isError,
-    error: coffeeBrands.error,
-    data: coffeeBrands.data,
-  });
+  console.log("📊 Coffee Consumption Raw:", coffeeConsumption.data);
+  console.log("📊 Coffee Consumption Teams:", coffeeConsumption.data?.teams);
+  console.log("📊 Snack Impact Raw:", snackImpact.data);
+  console.log("📊 Coffee Consumption Transformed:", coffeeConsumptionData);
+  console.log(
+    "📊 Coffee Consumption Data Length:",
+    coffeeConsumptionData.length
+  );
+  console.log("📊 Snack Impact Transformed:", snackImpactData);
 
-  console.log("📊 Dashboard - Snack Brands:", {
-    isLoading: snackBrands.isLoading,
-    isError: snackBrands.isError,
-    error: snackBrands.error,
-    data: snackBrands.data,
-  });
+  // 차트 데이터 변환 (API 응답이 직접 배열 형태)
+  const coffeeChartData = Array.isArray(coffeeBrands.data)
+    ? coffeeBrands.data.map((item) => ({
+        brand: item.brand || item.name || "Unknown",
+        count: item.popularity || item.share || 0,
+        name: item.brand || item.name || "Unknown",
+        value: item.popularity || item.share || 0,
+      }))
+    : undefined;
 
-  // 차트 데이터 변환
-  const coffeeChartData = coffeeBrands.data?.data?.map((item) => ({
-    brand: item.brand,
-    count: item.count,
-    name: item.brand,
-    value: item.count,
-  }));
+  const snackChartData = Array.isArray(snackBrands.data)
+    ? snackBrands.data.map((item) => ({
+        brand: item.brand || item.name || "Unknown",
+        count: item.popularity || item.share || 0,
+        name: item.brand || item.name || "Unknown",
+        value: item.popularity || item.share || 0,
+      }))
+    : undefined;
 
-  const snackChartData = snackBrands.data?.data?.map((item) => ({
-    brand: item.brand,
-    count: item.count,
-    name: item.brand,
-    value: item.count,
-  }));
+  console.log("📊 Coffee Brands Raw Data:", coffeeBrands.data);
+  console.log("📊 Snack Brands Raw Data:", snackBrands.data);
+  console.log("📊 Coffee Chart Data:", coffeeChartData);
+  console.log("📊 Snack Chart Data:", snackChartData);
 
   return (
     <div className="flex h-screen overflow-hidden">
@@ -90,14 +137,16 @@ export default function DashboardPage() {
                     <div className="flex h-64 items-center justify-center text-red-500">
                       <p>데이터를 불러오는데 실패했습니다.</p>
                     </div>
-                  ) : coffeeChartData ? (
+                  ) : coffeeChartData && coffeeChartData.length > 0 ? (
                     <SimpleBarChart
                       data={coffeeChartData}
                       dataKey="count"
                       xAxisKey="brand"
                       color="#8884d8"
+                      chartId="coffee-bar"
+                      label="점유율"
                     />
-                  ) : (
+                  ) : coffeeBrands.isLoading ? null : (
                     <div className="flex h-64 items-center justify-center text-gray-500">
                       <p>데이터가 없습니다.</p>
                     </div>
@@ -114,9 +163,12 @@ export default function DashboardPage() {
                     <div className="flex h-64 items-center justify-center text-red-500">
                       <p>데이터를 불러오는데 실패했습니다.</p>
                     </div>
-                  ) : coffeeChartData ? (
-                    <SimpleDonutChart data={coffeeChartData} />
-                  ) : (
+                  ) : coffeeChartData && coffeeChartData.length > 0 ? (
+                    <SimpleDonutChart
+                      data={coffeeChartData}
+                      chartId="coffee-donut"
+                    />
+                  ) : coffeeBrands.isLoading ? null : (
                     <div className="flex h-64 items-center justify-center text-gray-500">
                       <p>데이터가 없습니다.</p>
                     </div>
@@ -133,14 +185,16 @@ export default function DashboardPage() {
                     <div className="flex h-64 items-center justify-center text-red-500">
                       <p>데이터를 불러오는데 실패했습니다.</p>
                     </div>
-                  ) : snackChartData ? (
+                  ) : snackChartData && snackChartData.length > 0 ? (
                     <SimpleBarChart
                       data={snackChartData}
                       dataKey="count"
                       xAxisKey="brand"
                       color="#82ca9d"
+                      chartId="snack-bar"
+                      label="점유율"
                     />
-                  ) : (
+                  ) : snackBrands.isLoading ? null : (
                     <div className="flex h-64 items-center justify-center text-gray-500">
                       <p>데이터가 없습니다.</p>
                     </div>
@@ -157,8 +211,83 @@ export default function DashboardPage() {
                     <div className="flex h-64 items-center justify-center text-red-500">
                       <p>데이터를 불러오는데 실패했습니다.</p>
                     </div>
-                  ) : snackChartData ? (
-                    <SimpleDonutChart data={snackChartData} />
+                  ) : snackChartData && snackChartData.length > 0 ? (
+                    <SimpleDonutChart
+                      data={snackChartData}
+                      chartId="snack-donut"
+                    />
+                  ) : snackBrands.isLoading ? null : (
+                    <div className="flex h-64 items-center justify-center text-gray-500">
+                      <p>데이터가 없습니다.</p>
+                    </div>
+                  )}
+                </ChartCard>
+              </div>
+            </div>
+
+            {/* 스택형 바 차트 섹션 */}
+            <div>
+              <h2 className="mb-4 text-xl font-bold text-gray-900 dark:text-white">
+                주간 트렌드 (스택형 바 차트)
+              </h2>
+              <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+                {/* 기분 트렌드 - 스택형 바 */}
+                <ChartCard
+                  title="주간 기분 트렌드 (스택형 바)"
+                  description="주별 감정 상태 백분율"
+                  isLoading={moodTrend.isLoading}
+                >
+                  {moodTrend.isError ? (
+                    <div className="flex h-64 items-center justify-center text-red-500">
+                      <p>데이터를 불러오는데 실패했습니다.</p>
+                    </div>
+                  ) : Array.isArray(moodTrend.data) ? (
+                    <StackedBarChart
+                      data={moodTrend.data}
+                      xAxisKey="week"
+                      stackKeys={[
+                        { key: "happy", color: "#10b981", label: "행복" },
+                        { key: "tired", color: "#f59e0b", label: "피곤" },
+                        {
+                          key: "stressed",
+                          color: "#ef4444",
+                          label: "스트레스",
+                        },
+                      ]}
+                      chartId="mood-stacked-bar"
+                    />
+                  ) : (
+                    <div className="flex h-64 items-center justify-center text-gray-500">
+                      <p>데이터가 없습니다.</p>
+                    </div>
+                  )}
+                </ChartCard>
+
+                {/* 운동 트렌드 - 스택형 바 */}
+                <ChartCard
+                  title="주간 운동 트렌드 (스택형 바)"
+                  description="주별 운동 종류 백분율"
+                  isLoading={workoutTrend.isLoading}
+                >
+                  {workoutTrend.isError ? (
+                    <div className="flex h-64 items-center justify-center text-red-500">
+                      <p>데이터를 불러오는데 실패했습니다.</p>
+                    </div>
+                  ) : Array.isArray(workoutTrend.data) ? (
+                    <StackedBarChart
+                      data={workoutTrend.data}
+                      xAxisKey="week"
+                      stackKeys={[
+                        { key: "running", color: "#3b82f6", label: "러닝" },
+                        { key: "cycling", color: "#8b5cf6", label: "사이클링" },
+                        {
+                          key: "stretching",
+                          color: "#ec4899",
+                          label: "스트레칭",
+                        },
+                      ]}
+                      chartId="workout-stacked-bar"
+                    />
                   ) : (
                     <div className="flex h-64 items-center justify-center text-gray-500">
                       <p>데이터가 없습니다.</p>
@@ -168,54 +297,241 @@ export default function DashboardPage() {
               </div>
             </div>
 
-            {/* 추가 차트 섹션 (향후 구현) */}
+            {/* 스택형 면적 차트 섹션 */}
             <div>
               <h2 className="mb-4 text-xl font-bold text-gray-900 dark:text-white">
-                주간 트렌드
+                주간 트렌드 (스택형 면적 차트)
               </h2>
               <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+                {/* 기분 트렌드 - 스택형 면적 */}
                 <ChartCard
-                  title="주간 기분 트렌드"
-                  description="스택형 바/면적 차트 (구현 예정)"
+                  title="주간 기분 트렌드 (스택형 면적)"
+                  description="주별 감정 상태 백분율"
+                  isLoading={moodTrend.isLoading}
                 >
-                  <div className="flex h-64 items-center justify-center text-gray-500 dark:text-gray-400">
-                    <p>주간 기분 트렌드 차트</p>
-                  </div>
+                  {moodTrend.isError ? (
+                    <div className="flex h-64 items-center justify-center text-red-500">
+                      <p>데이터를 불러오는데 실패했습니다.</p>
+                    </div>
+                  ) : Array.isArray(moodTrend.data) ? (
+                    <StackedAreaChart
+                      data={moodTrend.data}
+                      xAxisKey="week"
+                      stackKeys={[
+                        { key: "happy", color: "#10b981", label: "행복" },
+                        { key: "tired", color: "#f59e0b", label: "피곤" },
+                        {
+                          key: "stressed",
+                          color: "#ef4444",
+                          label: "스트레스",
+                        },
+                      ]}
+                      chartId="mood-stacked-area"
+                    />
+                  ) : (
+                    <div className="flex h-64 items-center justify-center text-gray-500">
+                      <p>데이터가 없습니다.</p>
+                    </div>
+                  )}
                 </ChartCard>
 
+                {/* 운동 트렌드 - 스택형 면적 */}
                 <ChartCard
-                  title="주간 운동 트렌드"
-                  description="스택형 바/면적 차트 (구현 예정)"
+                  title="주간 운동 트렌드 (스택형 면적)"
+                  description="주별 운동 종류 백분율"
+                  isLoading={workoutTrend.isLoading}
                 >
-                  <div className="flex h-64 items-center justify-center text-gray-500 dark:text-gray-400">
-                    <p>주간 운동 트렌드 차트</p>
-                  </div>
+                  {workoutTrend.isError ? (
+                    <div className="flex h-64 items-center justify-center text-red-500">
+                      <p>데이터를 불러오는데 실패했습니다.</p>
+                    </div>
+                  ) : Array.isArray(workoutTrend.data) ? (
+                    <StackedAreaChart
+                      data={workoutTrend.data}
+                      xAxisKey="week"
+                      stackKeys={[
+                        { key: "running", color: "#3b82f6", label: "러닝" },
+                        { key: "cycling", color: "#8b5cf6", label: "사이클링" },
+                        {
+                          key: "stretching",
+                          color: "#ec4899",
+                          label: "스트레칭",
+                        },
+                      ]}
+                      chartId="workout-stacked-area"
+                    />
+                  ) : (
+                    <div className="flex h-64 items-center justify-center text-gray-500">
+                      <p>데이터가 없습니다.</p>
+                    </div>
+                  )}
                 </ChartCard>
               </div>
             </div>
 
-            {/* 멀티라인 차트 섹션 (향후 구현) */}
+            {/* 멀티라인 차트 섹션 */}
             <div>
               <h2 className="mb-4 text-xl font-bold text-gray-900 dark:text-white">
-                상세 분석
+                상세 분석 (멀티라인 차트)
               </h2>
               <div className="grid grid-cols-1 gap-6">
+                {/* 커피 소비량 */}
                 <ChartCard
-                  title="커피 소비량"
-                  description="멀티라인 차트 (구현 예정)"
+                  title="커피 소비량 분석"
+                  description="팀별 커피 섭취량에 따른 버그 수와 생산성"
+                  isLoading={coffeeConsumption.isLoading}
                 >
-                  <div className="flex h-96 items-center justify-center text-gray-500 dark:text-gray-400">
-                    <p>커피 소비량 멀티라인 차트</p>
-                  </div>
+                  {coffeeConsumption.isError ? (
+                    <div className="flex h-96 items-center justify-center text-red-500">
+                      <p>데이터를 불러오는데 실패했습니다.</p>
+                    </div>
+                  ) : coffeeConsumptionData &&
+                    coffeeConsumptionData.length > 0 ? (
+                    <MultiLineChart
+                      data={coffeeConsumptionData}
+                      xAxisKey="cupsPerDay"
+                      xAxisLabel="커피 섭취량 (잔/일)"
+                      leftYAxisLabel="버그 수"
+                      rightYAxisLabel="생산성 점수"
+                      lines={[
+                        // Frontend 팀
+                        {
+                          key: "bugs",
+                          team: "Frontend",
+                          color: "#3b82f6",
+                          label: "Frontend - 버그",
+                          yAxisId: "left",
+                          strokeDasharray: undefined,
+                        },
+                        {
+                          key: "productivity",
+                          team: "Frontend",
+                          color: "#3b82f6",
+                          label: "Frontend - 생산성",
+                          yAxisId: "right",
+                          strokeDasharray: "5 5",
+                        },
+                        // Backend 팀
+                        {
+                          key: "bugs",
+                          team: "Backend",
+                          color: "#10b981",
+                          label: "Backend - 버그",
+                          yAxisId: "left",
+                          strokeDasharray: undefined,
+                        },
+                        {
+                          key: "productivity",
+                          team: "Backend",
+                          color: "#10b981",
+                          label: "Backend - 생산성",
+                          yAxisId: "right",
+                          strokeDasharray: "5 5",
+                        },
+                        // AI 팀
+                        {
+                          key: "bugs",
+                          team: "AI",
+                          color: "#8b5cf6",
+                          label: "AI - 버그",
+                          yAxisId: "left",
+                          strokeDasharray: undefined,
+                        },
+                        {
+                          key: "productivity",
+                          team: "AI",
+                          color: "#8b5cf6",
+                          label: "AI - 생산성",
+                          yAxisId: "right",
+                          strokeDasharray: "5 5",
+                        },
+                      ]}
+                      chartId="coffee-consumption"
+                    />
+                  ) : (
+                    <div className="flex h-96 items-center justify-center text-gray-500">
+                      <p>데이터가 없습니다.</p>
+                    </div>
+                  )}
                 </ChartCard>
 
+                {/* 스낵 영향도 */}
                 <ChartCard
-                  title="스낵 영향도"
-                  description="멀티라인 차트 (구현 예정)"
+                  title="스낵 영향도 분석"
+                  description="팀별 스낵 수에 따른 회의불참과 사기"
+                  isLoading={snackImpact.isLoading}
                 >
-                  <div className="flex h-96 items-center justify-center text-gray-500 dark:text-gray-400">
-                    <p>스낵 영향도 멀티라인 차트</p>
-                  </div>
+                  {snackImpact.isError ? (
+                    <div className="flex h-96 items-center justify-center text-red-500">
+                      <p>데이터를 불러오는데 실패했습니다.</p>
+                    </div>
+                  ) : snackImpactData && snackImpactData.length > 0 ? (
+                    <MultiLineChart
+                      data={snackImpactData}
+                      xAxisKey="snackCount"
+                      xAxisLabel="스낵 수 (개/일)"
+                      leftYAxisLabel="회의불참 횟수"
+                      rightYAxisLabel="사기 점수"
+                      lines={[
+                        // Marketing 팀
+                        {
+                          key: "meetingsMissed",
+                          team: "Marketing",
+                          color: "#ef4444",
+                          label: "Marketing - 회의불참",
+                          yAxisId: "left",
+                          strokeDasharray: undefined,
+                        },
+                        {
+                          key: "morale",
+                          team: "Marketing",
+                          color: "#ef4444",
+                          label: "Marketing - 사기",
+                          yAxisId: "right",
+                          strokeDasharray: "5 5",
+                        },
+                        // Sales 팀
+                        {
+                          key: "meetingsMissed",
+                          team: "Sales",
+                          color: "#f59e0b",
+                          label: "Sales - 회의불참",
+                          yAxisId: "left",
+                          strokeDasharray: undefined,
+                        },
+                        {
+                          key: "morale",
+                          team: "Sales",
+                          color: "#f59e0b",
+                          label: "Sales - 사기",
+                          yAxisId: "right",
+                          strokeDasharray: "5 5",
+                        },
+                        // HR 팀
+                        {
+                          key: "meetingsMissed",
+                          team: "HR",
+                          color: "#8b5cf6",
+                          label: "HR - 회의불참",
+                          yAxisId: "left",
+                          strokeDasharray: undefined,
+                        },
+                        {
+                          key: "morale",
+                          team: "HR",
+                          color: "#8b5cf6",
+                          label: "HR - 사기",
+                          yAxisId: "right",
+                          strokeDasharray: "5 5",
+                        },
+                      ]}
+                      chartId="snack-impact"
+                    />
+                  ) : (
+                    <div className="flex h-96 items-center justify-center text-gray-500">
+                      <p>데이터가 없습니다.</p>
+                    </div>
+                  )}
                 </ChartCard>
               </div>
             </div>

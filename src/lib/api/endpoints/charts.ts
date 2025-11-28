@@ -2,8 +2,8 @@
  * 차트 데이터 API 엔드포인트
  */
 
-import { apiClient } from '../client';
-import { API_ENDPOINTS } from '@/constants/api';
+import { apiClient } from "../client";
+import { API_ENDPOINTS } from "@/constants/api";
 import type {
   TopCoffeeBrandsResponse,
   PopularSnackBrandsResponse,
@@ -11,7 +11,7 @@ import type {
   WeeklyWorkoutTrendResponse,
   CoffeeConsumptionResponse,
   SnackImpactResponse,
-} from '@/types/chart';
+} from "@/types/chart";
 
 export const chartsApi = {
   /**
@@ -21,6 +21,7 @@ export const chartsApi = {
     const response = await apiClient.get<TopCoffeeBrandsResponse>(
       API_ENDPOINTS.MOCK.TOP_COFFEE_BRANDS
     );
+    console.log("☕ getTopCoffeeBrands - Raw response:", response.data);
     return response.data;
   },
 
@@ -31,6 +32,7 @@ export const chartsApi = {
     const response = await apiClient.get<PopularSnackBrandsResponse>(
       API_ENDPOINTS.MOCK.POPULAR_SNACK_BRANDS
     );
+    console.log("🍿 getPopularSnackBrands - Raw response:", response.data);
     return response.data;
   },
 
@@ -74,4 +76,3 @@ export const chartsApi = {
     return response.data;
   },
 };
-
