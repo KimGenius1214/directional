@@ -4,8 +4,7 @@
 
 "use client";
 
-import { useState, useEffect, Suspense } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useState, Suspense } from "react";
 import { useAuthStore } from "@/lib/store";
 import { authApi } from "@/lib/api/endpoints";
 import {
@@ -23,23 +22,12 @@ import Link from "next/link";
 import { toast } from "sonner";
 
 function LoginForm() {
-  const router = useRouter();
-  const searchParams = useSearchParams();
   const login = useAuthStore((state) => state.login);
-  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
-
-  // 이미 로그인된 경우 리다이렉트
-  useEffect(() => {
-    if (isAuthenticated) {
-      const redirect = searchParams.get("redirect") || "/";
-      router.push(redirect);
-    }
-  }, [isAuthenticated, router, searchParams]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -54,8 +42,10 @@ function LoginForm() {
         description: `${response.user.email}님, 환영합니다!`,
       });
 
-      // 항상 홈으로 리다이렉트
-      router.push("/");
+      // 쿠키가 설정될 시간을 주고 페이지 완전히 새로고침
+      setTimeout(() => {
+        window.location.href = "/";
+      }, 100);
     } catch (err: unknown) {
       let errorMessage = "로그인에 실패했습니다.";
 

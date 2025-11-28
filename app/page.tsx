@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { Header } from "@/components/layout";
 import { useAuthStore } from "@/lib/store";
 
@@ -36,15 +37,21 @@ export default function Home() {
             {/* Hero Section */}
             <div className="text-center mb-16">
               <div className="mb-6 flex justify-center">
-                <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-500 to-purple-600 shadow-lg">
-                  <span className="text-4xl font-bold text-white">D</span>
+                <div className="relative h-20 w-20 rounded-2xl overflow-hidden shadow-lg">
+                  <Image
+                    src="/directional_logo.png"
+                    alt="Directional Logo"
+                    fill
+                    className="object-contain"
+                    priority
+                  />
                 </div>
               </div>
               <h1 className="text-5xl font-bold text-gray-900 dark:text-white mb-4">
                 Directional
               </h1>
               <p className="text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
-                게시글 관리와 데이터 시각화를 위한 올인원 플랫폼
+                게시글 관리 및 데이터 시각화
               </p>
             </div>
 

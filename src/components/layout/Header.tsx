@@ -5,6 +5,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { useAuthStore, useThemeStore } from "@/lib/store";
 import { cn } from "@/lib/utils";
@@ -40,7 +41,18 @@ export default function Header() {
 
   const handleLogout = () => {
     logout();
-    router.push("/login");
+    // 현재 페이지가 보호된 경로(/posts)인지 확인
+    const isProtectedPath = pathname.startsWith("/posts");
+
+    setTimeout(() => {
+      if (isProtectedPath) {
+        // 보호된 경로에서는 홈으로
+        window.location.href = "/";
+      } else {
+        // 그 외에는 현재 페이지 새로고침
+        window.location.reload();
+      }
+    }, 100);
   };
 
   return (
@@ -48,8 +60,14 @@ export default function Header() {
       <div className="mx-auto flex h-14 sm:h-16 max-w-7xl items-center justify-between px-2 sm:px-4 lg:px-8">
         {/* Logo */}
         <Link href="/" className="flex items-center gap-1.5 sm:gap-2">
-          <div className="flex h-7 w-7 sm:h-8 sm:w-8 items-center justify-center rounded-lg bg-gradient-to-br from-blue-500 to-purple-600">
-            <span className="text-base sm:text-lg font-bold text-white">D</span>
+          <div className="relative h-7 w-7 sm:h-8 sm:w-8 rounded-lg overflow-hidden">
+            <Image
+              src="/directional_logo.png"
+              alt="Directional"
+              fill
+              className="object-contain"
+              priority
+            />
           </div>
           <span className="text-base sm:text-lg font-bold text-gray-900 dark:text-white">
             Directional

@@ -5,6 +5,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { useAuthStore, useThemeStore } from "@/lib/store";
 import { cn } from "@/lib/utils";
@@ -41,7 +42,18 @@ export default function Sidebar() {
 
   const handleLogout = () => {
     logout();
-    router.push("/login");
+    // 현재 페이지가 보호된 경로(/posts)인지 확인
+    const isProtectedPath = pathname.startsWith("/posts");
+
+    setTimeout(() => {
+      if (isProtectedPath) {
+        // 보호된 경로에서는 홈으로
+        window.location.href = "/";
+      } else {
+        // 그 외에는 현재 페이지 새로고침
+        window.location.reload();
+      }
+    }, 100);
   };
 
   return (
@@ -49,8 +61,14 @@ export default function Sidebar() {
       {/* Logo */}
       <div className="flex h-16 items-center border-b border-gray-200 px-6 dark:border-gray-800">
         <Link href="/" className="flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-blue-500 to-purple-600">
-            <span className="text-lg font-bold text-white">D</span>
+          <div className="relative h-8 w-8 rounded-lg overflow-hidden">
+            <Image
+              src="/directional_logo.png"
+              alt="Directional"
+              fill
+              className="object-contain"
+              priority
+            />
           </div>
           <span className="text-lg font-bold text-gray-900 dark:text-white">
             Directional
