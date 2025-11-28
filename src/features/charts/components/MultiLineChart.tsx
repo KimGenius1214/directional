@@ -192,8 +192,198 @@ export default function MultiLineChart({
 
   return (
     <div className="space-y-4">
-      {/* 커스텀 범례 */}
-      <div className="flex flex-wrap gap-3 justify-center">
+      {/* 차트 (모바일에서 가로 스크롤 가능) */}
+      <div className="w-full overflow-x-auto">
+        <div className="min-w-[600px]">
+          <ResponsiveContainer
+            width="100%"
+            height={400}
+            className="sm:!h-[500px]"
+          >
+            <LineChart
+              data={mergedData}
+              margin={{ top: 10, right: 60, left: 60, bottom: 10 }}
+            >
+              <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+              <XAxis
+                dataKey={xAxisKey}
+                label={{
+                  value: xAxisLabel,
+                  position: "insideBottom",
+                  offset: -5,
+                  style: { fill: "#6b7280", fontSize: 11 },
+                }}
+                tick={{ fill: "#6b7280", fontSize: 10 }}
+                stroke="#9ca3af"
+              />
+              <YAxis
+                yAxisId="left"
+                label={{
+                  value: leftYAxisLabel,
+                  angle: -90,
+                  position: "insideLeft",
+                  style: { fill: "#6b7280", fontSize: 11 },
+                }}
+                tick={{ fill: "#6b7280", fontSize: 10 }}
+                stroke="#9ca3af"
+                width={55}
+              />
+              <YAxis
+                yAxisId="right"
+                orientation="right"
+                label={{
+                  value: rightYAxisLabel,
+                  angle: 90,
+                  position: "insideRight",
+                  style: { fill: "#6b7280", fontSize: 11 },
+                }}
+                tick={{ fill: "#6b7280", fontSize: 10 }}
+                stroke="#9ca3af"
+                width={55}
+              />
+              <Tooltip
+                animationDuration={0}
+                isAnimationActive={false}
+                content={(props) => (
+                  <CustomTooltip
+                    {...props}
+                    xAxisLabel={xAxisLabel}
+                    hoveredLineKey={hoveredLineKey}
+                    lines={lines}
+                  />
+                )}
+              />
+              <Legend content={() => null} />
+              {/* 먼저 투명한 두꺼운 선들을 모두 렌더링 (호버 영역) */}
+              {lines.map((line) => {
+                const legendKey = `${line.team}-${line.key}`;
+                const legendItem = legendItems[legendKey];
+                if (!legendItem || !legendItem.visible) return null;
+
+                const dataKey = `${line.team}-${line.key}`;
+
+                return (
+                  <Line
+                    key={`${legendKey}-hover`}
+                    type="monotone"
+                    dataKey={dataKey}
+                    stroke={legendItem.color}
+                    strokeOpacity={0}
+                    strokeWidth={15}
+                    yAxisId={line.yAxisId}
+                    dot={false}
+                    activeDot={false}
+                    connectNulls
+                    onMouseEnter={() => {
+                      setHoveredLineKey(legendKey);
+                    }}
+                    onMouseLeave={() => {
+                      setHoveredLineKey(null);
+                    }}
+                    style={{ cursor: "pointer" }}
+                    isAnimationActive={false}
+                  />
+                );
+              })}
+              {/* 그 다음 실제 보이는 선들을 렌더링 */}
+              {lines.map((line) => {
+                const legendKey = `${line.team}-${line.key}`;
+                const legendItem = legendItems[legendKey];
+                if (!legendItem || !legendItem.visible) return null;
+
+                // 병합된 데이터의 키는 "팀명-필드명" 형태
+                const dataKey = `${line.team}-${line.key}`;
+
+                // shape에 따라 다른 마커 표시
+                // circle (원형) → 실선 라인 (bugs, meetingMissed)
+                // square (사각형) → 점선 라인 (productivity, morale)
+                const dotShape =
+                  line.shape === "square"
+                    ? (props: { cx: number; cy: number; index?: number }) => {
+                        const { cx, cy, index } = props;
+                        return (
+                          <rect
+                            key={`dot-${dataKey}-${index}`}
+                            x={cx - 6}
+                            y={cy - 6}
+                            width={12}
+                            height={12}
+                            fill={legendItem.color}
+                            stroke="#fff"
+                            strokeWidth={2}
+                          />
+                        );
+                      }
+                    : {
+                        fill: legendItem.color,
+                        r: 6,
+                        strokeWidth: 2,
+                        stroke: "#fff",
+                      };
+
+                const activeDotShape =
+                  line.shape === "square"
+                    ? (props: { cx: number; cy: number; index?: number }) => {
+                        const { cx, cy, index } = props;
+                        return (
+                          <rect
+                            key={`active-dot-${dataKey}-${index}`}
+                            x={cx - 8}
+                            y={cy - 8}
+                            width={16}
+                            height={16}
+                            fill={legendItem.color}
+                            stroke="#fff"
+                            strokeWidth={3}
+                          />
+                        );
+                      }
+                    : {
+                        r: 8,
+                        fill: legendItem.color,
+                        stroke: "#fff",
+                        strokeWidth: 3,
+                      };
+
+                return (
+                  <Line
+                    key={legendKey}
+                    type="monotone"
+                    dataKey={dataKey}
+                    stroke={legendItem.color}
+                    strokeWidth={3}
+                    strokeDasharray={line.strokeDasharray}
+                    yAxisId={line.yAxisId}
+                    name={legendItem.label || line.label}
+                    dot={dotShape}
+                    activeDot={{
+                      ...activeDotShape,
+                      onMouseEnter: () => {
+                        setHoveredLineKey(legendKey);
+                      },
+                      onMouseLeave: () => {
+                        setHoveredLineKey(null);
+                      },
+                    }}
+                    connectNulls
+                    onMouseEnter={() => {
+                      setHoveredLineKey(legendKey);
+                    }}
+                    onMouseLeave={() => {
+                      setHoveredLineKey(null);
+                    }}
+                    style={{ cursor: "pointer" }}
+                    isAnimationActive={true}
+                  />
+                );
+              })}
+            </LineChart>
+          </ResponsiveContainer>
+        </div>
+      </div>
+
+      {/* 커스텀 범례 (차트 아래) */}
+      <div className="flex flex-wrap gap-2 sm:gap-3 justify-center">
         {teams.map((team) => {
           const teamLines = lines.filter((l) => l.team === team);
           return teamLines.map((line) => {
@@ -204,26 +394,28 @@ export default function MultiLineChart({
             return (
               <div
                 key={legendKey}
-                className="flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-3 py-2 shadow-sm dark:border-gray-700 dark:bg-gray-800"
+                className="flex items-center gap-1.5 sm:gap-2 rounded-lg border border-gray-200 bg-white px-2 sm:px-3 py-1.5 sm:py-2 shadow-sm dark:border-gray-700 dark:bg-gray-800"
               >
                 <input
                   type="color"
                   value={legendItem.color}
                   onChange={(e) => updateColor(legendKey, e.target.value)}
-                  className="h-6 w-6 cursor-pointer rounded border-0"
+                  className="h-5 w-5 sm:h-6 sm:w-6 cursor-pointer rounded border-0"
                 />
-                <label className="flex items-center gap-2 cursor-pointer">
+                <label className="flex items-center gap-1.5 sm:gap-2 cursor-pointer">
                   <input
                     type="checkbox"
                     checked={legendItem.visible}
                     onChange={() => toggleItem(legendKey)}
                     className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                   />
-                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                  <span className="text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300">
                     {legendItem.label || line.label}
                   </span>
                   {line.strokeDasharray && (
-                    <span className="text-xs text-gray-500">(점선)</span>
+                    <span className="text-[10px] sm:text-xs text-gray-500">
+                      (점선)
+                    </span>
                   )}
                 </label>
               </div>
@@ -231,188 +423,6 @@ export default function MultiLineChart({
           });
         })}
       </div>
-
-      {/* 차트 */}
-      <ResponsiveContainer width="100%" height={500}>
-        <LineChart
-          data={mergedData}
-          margin={{ top: 20, right: 80, left: 80, bottom: 20 }}
-        >
-          <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-          <XAxis
-            dataKey={xAxisKey}
-            label={{
-              value: xAxisLabel,
-              position: "insideBottom",
-              offset: -5,
-              style: { fill: "#6b7280", fontSize: 12 },
-            }}
-            tick={{ fill: "#6b7280", fontSize: 12 }}
-            stroke="#9ca3af"
-          />
-          <YAxis
-            yAxisId="left"
-            label={{
-              value: leftYAxisLabel,
-              angle: -90,
-              position: "insideLeft",
-              style: { fill: "#6b7280", fontSize: 12 },
-            }}
-            tick={{ fill: "#6b7280", fontSize: 12 }}
-            stroke="#9ca3af"
-            width={70}
-          />
-          <YAxis
-            yAxisId="right"
-            orientation="right"
-            label={{
-              value: rightYAxisLabel,
-              angle: 90,
-              position: "insideRight",
-              style: { fill: "#6b7280", fontSize: 12 },
-            }}
-            tick={{ fill: "#6b7280", fontSize: 12 }}
-            stroke="#9ca3af"
-            width={70}
-          />
-          <Tooltip
-            animationDuration={0}
-            isAnimationActive={false}
-            content={(props) => (
-              <CustomTooltip
-                {...props}
-                xAxisLabel={xAxisLabel}
-                hoveredLineKey={hoveredLineKey}
-                lines={lines}
-              />
-            )}
-          />
-          <Legend content={() => null} />
-          {/* 먼저 투명한 두꺼운 선들을 모두 렌더링 (호버 영역) */}
-          {lines.map((line) => {
-            const legendKey = `${line.team}-${line.key}`;
-            const legendItem = legendItems[legendKey];
-            if (!legendItem || !legendItem.visible) return null;
-
-            const dataKey = `${line.team}-${line.key}`;
-
-            return (
-              <Line
-                key={`${legendKey}-hover`}
-                type="monotone"
-                dataKey={dataKey}
-                stroke={legendItem.color}
-                strokeOpacity={0}
-                strokeWidth={15}
-                yAxisId={line.yAxisId}
-                dot={false}
-                activeDot={false}
-                connectNulls
-                onMouseEnter={() => {
-                  setHoveredLineKey(legendKey);
-                }}
-                onMouseLeave={() => {
-                  setHoveredLineKey(null);
-                }}
-                style={{ cursor: "pointer" }}
-                isAnimationActive={false}
-              />
-            );
-          })}
-          {/* 그 다음 실제 보이는 선들을 렌더링 */}
-          {lines.map((line) => {
-            const legendKey = `${line.team}-${line.key}`;
-            const legendItem = legendItems[legendKey];
-            if (!legendItem || !legendItem.visible) return null;
-
-            // 병합된 데이터의 키는 "팀명-필드명" 형태
-            const dataKey = `${line.team}-${line.key}`;
-
-            // shape에 따라 다른 마커 표시
-            // circle (원형) → 실선 라인 (bugs, meetingMissed)
-            // square (사각형) → 점선 라인 (productivity, morale)
-            const dotShape =
-              line.shape === "square"
-                ? (props: { cx: number; cy: number; index?: number }) => {
-                    const { cx, cy, index } = props;
-                    return (
-                      <rect
-                        key={`dot-${dataKey}-${index}`}
-                        x={cx - 6}
-                        y={cy - 6}
-                        width={12}
-                        height={12}
-                        fill={legendItem.color}
-                        stroke="#fff"
-                        strokeWidth={2}
-                      />
-                    );
-                  }
-                : {
-                    fill: legendItem.color,
-                    r: 6,
-                    strokeWidth: 2,
-                    stroke: "#fff",
-                  };
-
-            const activeDotShape =
-              line.shape === "square"
-                ? (props: { cx: number; cy: number; index?: number }) => {
-                    const { cx, cy, index } = props;
-                    return (
-                      <rect
-                        key={`active-dot-${dataKey}-${index}`}
-                        x={cx - 8}
-                        y={cy - 8}
-                        width={16}
-                        height={16}
-                        fill={legendItem.color}
-                        stroke="#fff"
-                        strokeWidth={3}
-                      />
-                    );
-                  }
-                : {
-                    r: 8,
-                    fill: legendItem.color,
-                    stroke: "#fff",
-                    strokeWidth: 3,
-                  };
-
-            return (
-              <Line
-                key={legendKey}
-                type="monotone"
-                dataKey={dataKey}
-                stroke={legendItem.color}
-                strokeWidth={3}
-                strokeDasharray={line.strokeDasharray}
-                yAxisId={line.yAxisId}
-                name={legendItem.label || line.label}
-                dot={dotShape}
-                activeDot={{
-                  ...activeDotShape,
-                  onMouseEnter: () => {
-                    setHoveredLineKey(legendKey);
-                  },
-                  onMouseLeave: () => {
-                    setHoveredLineKey(null);
-                  },
-                }}
-                connectNulls
-                onMouseEnter={() => {
-                  setHoveredLineKey(legendKey);
-                }}
-                onMouseLeave={() => {
-                  setHoveredLineKey(null);
-                }}
-                style={{ cursor: "pointer" }}
-                isAnimationActive={true}
-              />
-            );
-          })}
-        </LineChart>
-      </ResponsiveContainer>
     </div>
   );
 }
