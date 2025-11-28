@@ -14,6 +14,7 @@ import {
   TableToolbar,
 } from "@/features/posts/components";
 import { Sidebar } from "@/components/layout";
+import { ErrorBoundary } from "@/components/error";
 import type { Post, PostCategory } from "@/types/post";
 
 export default function PostsPage() {
@@ -23,6 +24,12 @@ export default function PostsPage() {
   // 검색 및 필터 상태
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState<PostCategory | "">("");
+  const [useMockData, setUseMockData] = useState(false);
+
+  // Mock 데이터 상태 변경 감지
+  // useEffect(() => {
+  //   console.log("📊 PostsPage - useMockData 상태:", useMockData);
+  // }, [useMockData]);
 
   // 모달 상태
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -52,9 +59,9 @@ export default function PostsPage() {
       if (window.confirm(`"${post.title}" 게시글을 삭제하시겠습니까?`)) {
         try {
           await deletePost.mutateAsync(post.id);
-        } catch (error) {
-          console.error("게시글 삭제 실패:", error);
-          alert("게시글 삭제에 실패했습니다.");
+        } catch {
+          // Toast로 이미 에러가 표시되므로 추가 처리 불필요
+          // 에러가 발생해도 앱이 크래시되지 않음
         }
       }
     },
@@ -84,56 +91,61 @@ export default function PostsPage() {
   }
 
   return (
-    <div className="flex h-screen overflow-hidden">
-      <Sidebar />
+    <ErrorBoundary>
+      <div className="flex h-screen overflow-hidden">
+        <Sidebar />
 
-      <main className="flex-1 overflow-y-auto bg-gray-50 dark:bg-gray-900">
-        {/* Header */}
-        <div className="border-b border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-950">
-          <div className="px-4 py-6 sm:px-6 lg:px-8">
-            <div className="flex items-center justify-between">
-              <div>
-                <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-                  게시판
-                </h1>
-                <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                  게시글을 작성하고 관리하세요
-                </p>
+        <main className="flex-1 overflow-y-auto bg-gray-50 dark:bg-gray-900">
+          {/* Header */}
+          <div className="border-b border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-950">
+            <div className="px-4 py-6 sm:px-6 lg:px-8">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+                    게시판
+                  </h1>
+                  <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                    게시글을 작성하고 관리하세요
+                  </p>
+                </div>
               </div>
             </div>
           </div>
-        </div>
 
-        {/* Content */}
-        <div className="px-4 py-6 sm:px-6 lg:px-8">
-          <div className="mx-auto max-w-full space-y-6">
-            {/* 툴바 */}
-            <TableToolbar
-              search={search}
-              category={category}
-              onSearchChange={setSearch}
-              onCategoryChange={setCategory}
-              onCreatePost={handleCreatePost}
-            />
-
-            {/* 테이블 */}
-            <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-950">
-              <PostsTable
-                filters={filters}
-                onEditPost={handleEditPost}
-                onDeletePost={handleDeletePost}
+          {/* Content */}
+          <div className="px-4 py-6 sm:px-6 lg:px-8">
+            <div className="mx-auto max-w-full space-y-6">
+              {/* 툴바 */}
+              <TableToolbar
+                search={search}
+                category={category}
+                useMockData={useMockData}
+                onSearchChange={setSearch}
+                onCategoryChange={setCategory}
+                onMockDataToggle={setUseMockData}
+                onCreatePost={handleCreatePost}
               />
+
+              {/* 테이블 */}
+              <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-950">
+                <PostsTable
+                  filters={filters}
+                  useMockData={useMockData}
+                  onEditPost={handleEditPost}
+                  onDeletePost={handleDeletePost}
+                />
+              </div>
             </div>
           </div>
-        </div>
-      </main>
+        </main>
 
-      {/* 모달 */}
-      <PostFormModal
-        isOpen={isModalOpen}
-        onClose={handleCloseModal}
-        post={editingPost}
-      />
-    </div>
+        {/* 모달 */}
+        <PostFormModal
+          isOpen={isModalOpen}
+          onClose={handleCloseModal}
+          post={editingPost}
+        />
+      </div>
+    </ErrorBoundary>
   );
 }

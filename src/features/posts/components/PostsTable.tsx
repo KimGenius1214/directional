@@ -31,17 +31,19 @@ interface PostsTableProps {
     search?: string;
     category?: PostCategory;
   };
+  useMockData?: boolean;
   onEditPost: (post: Post) => void;
   onDeletePost: (post: Post) => void;
 }
 
 export default function PostsTable({
   filters,
+  useMockData = false,
   onEditPost,
   onDeletePost,
 }: PostsTableProps) {
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading } =
-    usePosts(filters);
+    usePosts(filters, useMockData);
 
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
@@ -57,7 +59,7 @@ export default function PostsTable({
   const flatData = useMemo(() => {
     const posts =
       data?.pages?.flatMap((page) => page.items).filter(Boolean) ?? [];
-    console.log("📊 PostsTable - Loaded posts:", posts.length, posts);
+    // console.log("📊 PostsTable - Loaded posts:", posts.length, posts);
     return posts;
   }, [data]);
 

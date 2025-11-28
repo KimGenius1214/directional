@@ -21,7 +21,7 @@ export const chartsApi = {
     const response = await apiClient.get<TopCoffeeBrandsResponse>(
       API_ENDPOINTS.MOCK.TOP_COFFEE_BRANDS
     );
-    console.log("☕ getTopCoffeeBrands - Raw response:", response.data);
+    // console.log("☕ getTopCoffeeBrands - Raw response:", response.data);
     return response.data;
   },
 
@@ -32,7 +32,7 @@ export const chartsApi = {
     const response = await apiClient.get<PopularSnackBrandsResponse>(
       API_ENDPOINTS.MOCK.POPULAR_SNACK_BRANDS
     );
-    console.log("🍿 getPopularSnackBrands - Raw response:", response.data);
+    // console.log("🍿 getPopularSnackBrands - Raw response:", response.data);
     return response.data;
   },
 

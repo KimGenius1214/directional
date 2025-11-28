@@ -175,7 +175,10 @@ export default function MultiLineChart({
 
       {/* 차트 */}
       <ResponsiveContainer width="100%" height={500}>
-        <LineChart data={mergedData}>
+        <LineChart
+          data={mergedData}
+          margin={{ top: 20, right: 80, left: 80, bottom: 20 }}
+        >
           <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
           <XAxis
             dataKey={xAxisKey}
@@ -198,6 +201,7 @@ export default function MultiLineChart({
             }}
             tick={{ fill: "#6b7280", fontSize: 12 }}
             stroke="#9ca3af"
+            width={70}
           />
           <YAxis
             yAxisId="right"
@@ -210,6 +214,7 @@ export default function MultiLineChart({
             }}
             tick={{ fill: "#6b7280", fontSize: 12 }}
             stroke="#9ca3af"
+            width={70}
           />
           <Tooltip content={<CustomTooltip />} />
           <Legend content={() => null} />

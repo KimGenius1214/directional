@@ -26,15 +26,33 @@ export const postsApi = {
     if (filters.cursor) params.append("cursor", filters.cursor);
     if (filters.limit) params.append("limit", filters.limit.toString());
 
-    console.log("📝 getPosts - Filters:", filters);
-    console.log("📝 getPosts - Query params:", params.toString());
+    // console.log("📝 getPosts - Filters:", filters);
+    // console.log("📝 getPosts - Query params:", params.toString());
 
     const response = await apiClient.get<PostsResponse>(
       `${API_ENDPOINTS.POSTS.BASE}?${params.toString()}`
     );
 
-    console.log("📝 getPosts - Response:", response.data);
+    // console.log("📝 getPosts - Response:", response.data);
     return response.data;
+  },
+
+  /**
+   * 목업 게시글 목록 조회 (테스트용)
+   */
+  getMockPosts: async (): Promise<Post[]> => {
+    // console.log("🎭 getMockPosts - API 호출 시작:", API_ENDPOINTS.MOCK.POSTS);
+    const response = await apiClient.get(API_ENDPOINTS.MOCK.POSTS);
+    // console.log("🎭 getMockPosts - 전체 응답:", response);
+    // console.log("🎭 getMockPosts - response.data:", response.data);
+
+    // API가 { items: Post[] } 형태로 반환하는 경우 처리
+    const posts = Array.isArray(response.data)
+      ? response.data
+      : response.data?.items || [];
+
+    // console.log("🎭 getMockPosts - 최종 게시글 수:", posts.length);
+    return posts;
   },
 
   /**

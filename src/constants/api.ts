@@ -5,6 +5,9 @@
 export const API_BASE_URL = "https://fe-hiring-rest-api.vercel.app";
 
 export const API_ENDPOINTS = {
+  // Health Check
+  HEALTH: "/health",
+
   // Auth
   AUTH: {
     LOGIN: "/auth/login",
@@ -18,6 +21,7 @@ export const API_ENDPOINTS = {
 
   // Mock Data - Charts
   MOCK: {
+    POSTS: "/mock/posts",
     TOP_COFFEE_BRANDS: "/mock/top-coffee-brands",
     POPULAR_SNACK_BRANDS: "/mock/popular-snack-brands",
     WEEKLY_MOOD_TREND: "/mock/weekly-mood-trend",

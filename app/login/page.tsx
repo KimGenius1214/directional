@@ -20,6 +20,7 @@ import {
 } from "@/components/ui";
 import { AxiosError } from "axios";
 import Link from "next/link";
+import { toast } from "sonner";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -49,19 +50,26 @@ export default function LoginPage() {
       const response = await authApi.login({ email, password });
       login(response.token, response.user);
 
+      toast.success("로그인 성공", {
+        description: `${response.user.email}님, 환영합니다!`,
+      });
+
       // 리다이렉트 URL이 있으면 해당 페이지로, 없으면 대시보드로
       const redirect = searchParams.get("redirect") || "/dashboard";
       router.push(redirect);
     } catch (err: unknown) {
-      console.error("Login error:", err);
+      let errorMessage = "로그인에 실패했습니다.";
+
       if (err instanceof AxiosError) {
-        setError(
+        errorMessage =
           err.response?.data?.message ||
-            "로그인에 실패했습니다. 이메일과 비밀번호를 확인해주세요."
-        );
-      } else {
-        setError("로그인에 실패했습니다.");
+          "로그인에 실패했습니다. 이메일과 비밀번호를 확인해주세요.";
       }
+
+      setError(errorMessage);
+      toast.error("로그인 실패", {
+        description: errorMessage,
+      });
     } finally {
       setIsLoading(false);
     }

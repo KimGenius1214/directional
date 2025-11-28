@@ -2,11 +2,11 @@
  * React Query Provider 설정
  */
 
-'use client';
+"use client";
 
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
-import { useState } from 'react';
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
+import { useState } from "react";
 
 export function QueryProvider({ children }: { children: React.ReactNode }) {
   const [queryClient] = useState(
@@ -18,6 +18,12 @@ export function QueryProvider({ children }: { children: React.ReactNode }) {
             staleTime: 60 * 1000, // 1분
             refetchOnWindowFocus: false,
             retry: 1,
+            // 에러 발생 시 Error Boundary로 전파하지 않음
+            throwOnError: false,
+          },
+          mutations: {
+            // mutation 에러 발생 시 Error Boundary로 전파하지 않음
+            throwOnError: false,
           },
         },
       })
@@ -30,4 +36,3 @@ export function QueryProvider({ children }: { children: React.ReactNode }) {
     </QueryClientProvider>
   );
 }
-

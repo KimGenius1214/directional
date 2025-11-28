@@ -10,27 +10,78 @@ import {
 } from "@tanstack/react-query";
 import { postsApi } from "@/lib/api/endpoints";
 import type { PostFilters, CreatePostDto, UpdatePostDto } from "@/types/post";
+import { toast } from "sonner";
 
 /**
  * 게시글 무한 스크롤 조회 (Cursor 기반)
+ * @param filters - 검색 및 필터 조건
+ * @param useMockData - true면 mock 데이터 사용, false면 실제 API 사용
  */
-export const usePosts = (filters: PostFilters = {}) => {
-  console.log("🔎 usePosts - Called with filters:", filters);
+export const usePosts = (filters: PostFilters = {}, useMockData = false) => {
+  // console.log(
+  //   "🔎 usePosts - Called with filters:",
+  //   filters,
+  //   "useMockData:",
+  //   useMockData
+  // );
 
   return useInfiniteQuery({
-    queryKey: ["posts", filters],
-    queryFn: ({ pageParam }) => {
-      console.log("🔎 usePosts - queryFn called with cursor:", pageParam);
-      return postsApi.getPosts({ ...filters, cursor: pageParam, limit: 20 });
+    queryKey: ["posts", filters, useMockData],
+    queryFn: async ({ pageParam }) => {
+      // console.log(
+      //   "📡 usePosts queryFn - useMockData:",
+      //   useMockData,
+      //   "pageParam:",
+      //   pageParam
+      // );
+
+      if (useMockData) {
+        // console.log("✅ Mock 데이터 모드 활성화");
+        // Mock 데이터 사용
+        const mockPosts = await postsApi.getMockPosts();
+        // console.log("📦 Mock 데이터 로드 완료:", mockPosts.length, "개");
+
+        // 필터 적용 (클라이언트 사이드)
+        let filteredPosts = mockPosts;
+
+        if (filters.search) {
+          const searchLower = filters.search.toLowerCase();
+          filteredPosts = filteredPosts.filter(
+            (post) =>
+              post.title.toLowerCase().includes(searchLower) ||
+              post.body.toLowerCase().includes(searchLower)
+          );
+        }
+
+        if (filters.category) {
+          filteredPosts = filteredPosts.filter(
+            (post) => post.category === filters.category
+          );
+        }
+
+        // Mock 데이터 페이지네이션 (20개씩)
+        const pageSize = 20;
+        const currentPage = pageParam ? parseInt(String(pageParam)) : 0;
+        const startIndex = currentPage * pageSize;
+        const endIndex = startIndex + pageSize;
+        const paginatedPosts = filteredPosts.slice(startIndex, endIndex);
+        const hasMore = endIndex < filteredPosts.length;
+
+        // console.log("📤 Mock 데이터 반환:", paginatedPosts.length, "개 (전체:", filteredPosts.length, "개)");
+        return {
+          items: paginatedPosts,
+          nextCursor: hasMore ? String(currentPage + 1) : null,
+        };
+      } else {
+        // console.log("🌐 실제 API 호출");
+        // 실제 API 사용
+        return postsApi.getPosts({ ...filters, cursor: pageParam, limit: 20 });
+      }
     },
     getNextPageParam: (lastPage) => {
-      console.log("🔎 usePosts - getNextPageParam:", {
-        nextCursor: lastPage.nextCursor,
-        itemsCount: lastPage.items.length,
-      });
       return lastPage.nextCursor;
     },
-    initialPageParam: null as string | null,
+    initialPageParam: "0" as string | null,
   });
 };
 
@@ -55,6 +106,14 @@ export const useCreatePost = () => {
     mutationFn: (data: CreatePostDto) => postsApi.createPost(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["posts"] });
+      toast.success("게시글 작성 완료", {
+        description: "게시글이 성공적으로 작성되었습니다.",
+      });
+    },
+    onError: (error: Error) => {
+      toast.error("게시글 작성 실패", {
+        description: error.message || "게시글 작성 중 오류가 발생했습니다.",
+      });
     },
   });
 };
@@ -71,6 +130,14 @@ export const useUpdatePost = () => {
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ["posts"] });
       queryClient.invalidateQueries({ queryKey: ["post", variables.id] });
+      toast.success("게시글 수정 완료", {
+        description: "게시글이 성공적으로 수정되었습니다.",
+      });
+    },
+    onError: (error: Error) => {
+      toast.error("게시글 수정 실패", {
+        description: error.message || "게시글 수정 중 오류가 발생했습니다.",
+      });
     },
   });
 };
@@ -85,6 +152,14 @@ export const useDeletePost = () => {
     mutationFn: (id: string) => postsApi.deletePost(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["posts"] });
+      toast.success("게시글 삭제 완료", {
+        description: "게시글이 성공적으로 삭제되었습니다.",
+      });
+    },
+    onError: (error: Error) => {
+      toast.error("게시글 삭제 실패", {
+        description: error.message || "게시글 삭제 중 오류가 발생했습니다.",
+      });
     },
   });
 };
