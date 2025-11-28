@@ -433,37 +433,14 @@ className = "bg-white dark:bg-gray-950";
 
 현재 알려진 이슈가 없습니다. 버그 발견 시 이슈를 등록해주세요.
 
-## 🚀 향후 개선 계획
-
-- [ ] 게시글 이미지 업로드
-- [ ] 댓글 기능
-- [ ] 좋아요/북마크 기능
-- [ ] 실시간 알림
-- [ ] PWA 지원
-- [ ] 국제화 (i18n)
-- [ ] 성능 모니터링 (Sentry)
-- [ ] E2E 테스트 (Playwright)
-
-## 🤝 기여하기
-
-이 프로젝트는 개인 학습 및 포트폴리오 목적으로 작성되었지만, 개선 제안은 언제나 환영합니다!
-
-1. Fork the Project
-2. Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your Changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the Branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
-
-## 📝 라이선스
-
-이 프로젝트는 개인 학습 및 포트폴리오 목적으로 작성되었습니다.
-
 ## 🙋‍♂️ 문의
 
 프로젝트 관련 문의사항은 이슈를 등록해주세요.
 
 ---
 
-**Made with ❤️ using Next.js 16 + TypeScript + Tailwind CSS**
+## 🖥️ 배포 링크
 
-⭐ 이 프로젝트가 도움이 되었다면 Star를 눌러주세요!
+https://directional-sigma.vercel.app/
+
+**Made with ❤️ using Next.js 16 + TypeScript + Tailwind CSS**
