@@ -26,7 +26,6 @@ apiClient.interceptors.request.use(
         config.headers.Authorization = `Bearer ${token}`;
       }
     }
-    // console.log("🔵 API Request:", config.method?.toUpperCase(), config.url);
     return config;
   },
   (error) => {
@@ -42,13 +41,6 @@ apiClient.interceptors.request.use(
 // 응답 인터셉터: 에러 처리
 apiClient.interceptors.response.use(
   (response) => {
-    // console.log(
-    //   "🟢 API Response:",
-    //   response.config.url,
-    //   "Status:",
-    //   response.status
-    // );
-    // console.log("📦 Response Data:", response.data);
     return response;
   },
   (error: AxiosError<{ message?: string }>) => {

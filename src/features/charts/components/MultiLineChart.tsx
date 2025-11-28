@@ -393,21 +393,17 @@ export default function MultiLineChart({
                 activeDot={{
                   ...activeDotShape,
                   onMouseEnter: () => {
-                    // console.log("🎯 마커 호버:", line.team);
                     setHoveredLineKey(legendKey);
                   },
                   onMouseLeave: () => {
-                    // console.log("🎯 마커 leave");
                     setHoveredLineKey(null);
                   },
                 }}
                 connectNulls
                 onMouseEnter={() => {
-                  // console.log("📍 라인 호버:", line.team);
                   setHoveredLineKey(legendKey);
                 }}
                 onMouseLeave={() => {
-                  // console.log("📍 라인 leave");
                   setHoveredLineKey(null);
                 }}
                 style={{ cursor: "pointer" }}

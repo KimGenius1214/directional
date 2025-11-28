@@ -49,7 +49,6 @@ export function HealthCheckProvider({ children }: HealthCheckProviderProps) {
         lastChecked: new Date(),
         error: null,
       });
-      // console.log("✅ Health Check 성공:", response);
     } catch (error) {
       setHealthStatus({
         isHealthy: false,
@@ -75,7 +74,6 @@ export function HealthCheckProvider({ children }: HealthCheckProviderProps) {
             lastChecked: new Date(),
             error: null,
           });
-          // console.log("✅ Health Check 성공:", response);
         }
       } catch (error) {
         if (isMounted) {

@@ -21,11 +21,6 @@ export default function PostsPage() {
   const [category, setCategory] = useState<PostCategory | "">("");
   const [useMockData, setUseMockData] = useState(false);
 
-  // Mock 데이터 상태 변경 감지
-  // useEffect(() => {
-  //   console.log("📊 PostsPage - useMockData 상태:", useMockData);
-  // }, [useMockData]);
-
   // 모달 상태
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingPost, setEditingPost] = useState<Post | null>(null);

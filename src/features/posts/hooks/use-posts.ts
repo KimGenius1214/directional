@@ -18,28 +18,12 @@ import { toast } from "sonner";
  * @param useMockData - true면 mock 데이터 사용, false면 실제 API 사용
  */
 export const usePosts = (filters: PostFilters = {}, useMockData = false) => {
-  // console.log(
-  //   "🔎 usePosts - Called with filters:",
-  //   filters,
-  //   "useMockData:",
-  //   useMockData
-  // );
-
   return useInfiniteQuery({
     queryKey: ["posts", filters, useMockData],
     queryFn: async ({ pageParam }) => {
-      // console.log(
-      //   "📡 usePosts queryFn - useMockData:",
-      //   useMockData,
-      //   "pageParam:",
-      //   pageParam
-      // );
-
       if (useMockData) {
-        // console.log("✅ Mock 데이터 모드 활성화");
         // Mock 데이터 사용
         const mockPosts = await postsApi.getMockPosts();
-        // console.log("📦 Mock 데이터 로드 완료:", mockPosts.length, "개");
 
         // 필터 적용 (클라이언트 사이드)
         let filteredPosts = mockPosts;
@@ -67,13 +51,11 @@ export const usePosts = (filters: PostFilters = {}, useMockData = false) => {
         const paginatedPosts = filteredPosts.slice(startIndex, endIndex);
         const hasMore = endIndex < filteredPosts.length;
 
-        // console.log("📤 Mock 데이터 반환:", paginatedPosts.length, "개 (전체:", filteredPosts.length, "개)");
         return {
           items: paginatedPosts,
           nextCursor: hasMore ? String(currentPage + 1) : null,
         };
       } else {
-        // console.log("🌐 실제 API 호출");
         // 실제 API 사용
         return postsApi.getPosts({ ...filters, cursor: pageParam, limit: 20 });
       }

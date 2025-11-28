@@ -57,11 +57,9 @@ export default function DashboardPage() {
   const coffeeConsumptionData = coffeeConsumption.data?.teams
     ? coffeeConsumption.data.teams
         .filter((team) => {
-          // console.log("🔍 Filtering coffee team:", team);
           return team.series && Array.isArray(team.series);
         })
         .flatMap((team) => {
-          // console.log(`📝 Mapping team ${team.team}, series:`, team.series);
           return team.series.map((metric) => ({
             cupsPerDay: metric.cups,
             bugs: metric.bugs,
@@ -84,17 +82,6 @@ export default function DashboardPage() {
         )
     : [];
 
-  // 디버깅
-  // console.log("📊 Coffee Consumption Raw:", coffeeConsumption.data);
-  // console.log("📊 Coffee Consumption Teams:", coffeeConsumption.data?.teams);
-  // console.log("📊 Snack Impact Raw:", snackImpact.data);
-  // console.log("📊 Coffee Consumption Transformed:", coffeeConsumptionData);
-  // console.log(
-  //   "📊 Coffee Consumption Data Length:",
-  //   coffeeConsumptionData.length
-  // );
-  // console.log("📊 Snack Impact Transformed:", snackImpactData);
-
   // 차트 데이터 변환 (API 응답이 직접 배열 형태)
   const coffeeChartData = Array.isArray(coffeeBrands.data)
     ? coffeeBrands.data.map((item) => ({
@@ -113,11 +100,6 @@ export default function DashboardPage() {
         value: item.popularity || item.share || 0,
       }))
     : undefined;
-
-  // console.log("📊 Coffee Brands Raw Data:", coffeeBrands.data);
-  // console.log("📊 Snack Brands Raw Data:", snackBrands.data);
-  // console.log("📊 Coffee Chart Data:", coffeeChartData);
-  // console.log("📊 Snack Chart Data:", snackChartData);
 
   return (
     <div className="min-h-screen flex flex-col">

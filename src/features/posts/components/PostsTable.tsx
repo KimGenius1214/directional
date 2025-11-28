@@ -60,7 +60,6 @@ export default function PostsTable({
   const flatData = useMemo(() => {
     const posts =
       data?.pages?.flatMap((page) => page.items).filter(Boolean) ?? [];
-    // console.log("📊 PostsTable - Loaded posts:", posts.length, posts);
     return posts;
   }, [data]);
 

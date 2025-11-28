@@ -4,7 +4,7 @@
 
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuthStore } from "@/lib/store";
 import { authApi } from "@/lib/api/endpoints";
@@ -22,7 +22,7 @@ import { AxiosError } from "axios";
 import Link from "next/link";
 import { toast } from "sonner";
 
-export default function LoginPage() {
+function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const login = useAuthStore((state) => state.login);
@@ -144,5 +144,19 @@ export default function LoginPage() {
         </Card>
       </div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 px-4 dark:from-gray-900 dark:via-blue-900/20 dark:to-purple-900/20">
+          <div className="text-gray-500 dark:text-gray-400">로딩 중...</div>
+        </div>
+      }
+    >
+      <LoginForm />
+    </Suspense>
   );
 }

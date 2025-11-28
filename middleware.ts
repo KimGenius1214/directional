@@ -18,16 +18,9 @@ export function middleware(request: NextRequest) {
   const token = request.cookies.get("auth_token")?.value;
   const isAuthenticated = !!token;
 
-  //   console.log("🛡️ Middleware:", {
-  //     path: pathname,
-  //     isAuthenticated,
-  //     hasToken: !!token,
-  //   });
-
   // 보호된 경로 체크 (인증되지 않은 사용자만 리다이렉트)
   if (PROTECTED_PATHS.some((path) => pathname.startsWith(path))) {
     if (!isAuthenticated) {
-      //   console.log("🚫 Redirecting to /login - Not authenticated");
       const loginUrl = new URL("/login", request.url);
       loginUrl.searchParams.set("redirect", pathname);
       return NextResponse.redirect(loginUrl);
@@ -39,7 +32,6 @@ export function middleware(request: NextRequest) {
   // 로그인 페이지 체크 (이미 로그인한 사용자는 홈으로)
   if (AUTH_ONLY_PATHS.some((path) => pathname.startsWith(path))) {
     if (isAuthenticated) {
-      //   console.log("✅ Redirecting to / - Already authenticated");
       // 로그인 페이지에서만 홈(/)으로 리다이렉트
       return NextResponse.redirect(new URL("/", request.url));
     }
