@@ -5,8 +5,8 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
-// 보호된 경로 (인증 필요)
-const PROTECTED_PATHS = ["/dashboard", "/posts"];
+// 보호된 경로 (인증 필요) - /posts는 반드시 로그인 필요
+const PROTECTED_PATHS = ["/posts"];
 
 // 인증된 사용자는 접근 불가 (로그인 페이지만)
 const AUTH_ONLY_PATHS = ["/login"];
@@ -18,22 +18,23 @@ export function middleware(request: NextRequest) {
   const token = request.cookies.get("auth_token")?.value;
   const isAuthenticated = !!token;
 
-  // 보호된 경로 체크 (인증되지 않은 사용자만 리다이렉트)
+  // 보호된 경로 체크 (인증되지 않은 사용자는 로그인 페이지로)
   if (PROTECTED_PATHS.some((path) => pathname.startsWith(path))) {
     if (!isAuthenticated) {
       const loginUrl = new URL("/login", request.url);
       loginUrl.searchParams.set("redirect", pathname);
       return NextResponse.redirect(loginUrl);
     }
-    // 이미 인증된 사용자는 그대로 진행 (현재 페이지 유지)
     return NextResponse.next();
   }
 
   // 로그인 페이지 체크 (이미 로그인한 사용자는 홈으로)
   if (AUTH_ONLY_PATHS.some((path) => pathname.startsWith(path))) {
     if (isAuthenticated) {
-      // 로그인 페이지에서만 홈(/)으로 리다이렉트
-      return NextResponse.redirect(new URL("/", request.url));
+      // redirect 파라미터가 있으면 해당 페이지로, 없으면 홈으로
+      const redirect = request.nextUrl.searchParams.get("redirect");
+      const redirectUrl = redirect || "/";
+      return NextResponse.redirect(new URL(redirectUrl, request.url));
     }
   }
 

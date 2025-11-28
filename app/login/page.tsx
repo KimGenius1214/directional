@@ -54,9 +54,8 @@ function LoginForm() {
         description: `${response.user.email}님, 환영합니다!`,
       });
 
-      // 리다이렉트 URL이 있으면 해당 페이지로, 없으면 홈으로
-      const redirect = searchParams.get("redirect") || "/";
-      router.push(redirect);
+      // 항상 홈으로 리다이렉트
+      router.push("/");
     } catch (err: unknown) {
       let errorMessage = "로그인에 실패했습니다.";
 
