@@ -6,7 +6,7 @@
 "use client";
 
 import { Suspense, lazy } from "react";
-import { Sidebar } from "@/components/layout";
+import { Header } from "@/components/layout";
 import {
   useTopCoffeeBrands,
   usePopularSnackBrands,
@@ -120,13 +120,13 @@ export default function DashboardPage() {
   // console.log("📊 Snack Chart Data:", snackChartData);
 
   return (
-    <div className="flex h-screen overflow-hidden">
-      <Sidebar />
+    <div className="min-h-screen flex flex-col">
+      <Header />
 
-      <main className="flex-1 overflow-y-auto bg-gray-50 dark:bg-gray-900">
+      <main className="flex-1 bg-gray-50 dark:bg-gray-900">
         {/* Header */}
         <div className="border-b border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-950">
-          <div className="px-4 py-6 sm:px-6 lg:px-8">
+          <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
             <div className="flex items-center justify-between">
               <div>
                 <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
@@ -141,8 +141,8 @@ export default function DashboardPage() {
         </div>
 
         {/* Content */}
-        <div className="px-4 py-6 sm:px-6 lg:px-8">
-          <div className="mx-auto max-w-7xl space-y-8">
+        <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+          <div className="space-y-8">
             {/* 바 차트 & 도넛 차트 섹션 */}
             <div>
               <h2 className="mb-4 text-xl font-bold text-gray-900 dark:text-white">

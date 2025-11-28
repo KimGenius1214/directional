@@ -11,7 +11,7 @@ import {
   PostFormModal,
   TableToolbar,
 } from "@/features/posts/components";
-import { Sidebar } from "@/components/layout";
+import { Header } from "@/components/layout";
 import { ErrorBoundary } from "@/components/error";
 import type { Post, PostCategory } from "@/types/post";
 
@@ -87,19 +87,19 @@ export default function PostsPage() {
 
   return (
     <ErrorBoundary>
-      <div className="flex h-screen overflow-hidden">
-        <Sidebar />
+      <div className="min-h-screen flex flex-col">
+        <Header />
 
-        <main className="flex-1 overflow-y-auto bg-gray-50 dark:bg-gray-900">
+        <main className="flex-1 bg-gray-50 dark:bg-gray-900">
           {/* Header */}
           <div className="border-b border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-950">
-            <div className="px-4 py-6 sm:px-6 lg:px-8">
+            <div className="mx-auto max-w-7xl px-2 sm:px-4 py-4 sm:py-6 lg:px-8">
               <div className="flex items-center justify-between">
                 <div>
-                  <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+                  <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">
                     게시판
                   </h1>
-                  <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                  <p className="mt-1 text-xs sm:text-sm text-gray-500 dark:text-gray-400">
                     게시글을 작성하고 관리하세요
                   </p>
                 </div>
@@ -108,8 +108,8 @@ export default function PostsPage() {
           </div>
 
           {/* Content */}
-          <div className="px-4 py-6 sm:px-6 lg:px-8">
-            <div className="mx-auto max-w-full space-y-6">
+          <div className="mx-auto max-w-7xl px-2 sm:px-4 py-4 sm:py-6 lg:px-8">
+            <div className="space-y-4 sm:space-y-6">
               {/* 툴바 */}
               <TableToolbar
                 search={search}
@@ -122,7 +122,7 @@ export default function PostsPage() {
               />
 
               {/* 테이블 */}
-              <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-950">
+              <div className="rounded-lg border border-gray-200 bg-white p-3 sm:p-6 shadow-sm dark:border-gray-800 dark:bg-gray-950">
                 <PostsTable
                   filters={filters}
                   useMockData={useMockData}

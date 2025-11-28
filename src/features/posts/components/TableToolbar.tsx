@@ -28,10 +28,10 @@ export default function TableToolbar({
   onCreatePost,
 }: TableToolbarProps) {
   return (
-    <div className="flex flex-col gap-4">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <div className="flex flex-1 flex-col gap-4 sm:flex-row">
-          <div className="flex-1 min-w-[200px]">
+    <div className="flex flex-col gap-3 sm:gap-4">
+      <div className="flex flex-col gap-3 sm:gap-4 lg:flex-row lg:items-end lg:justify-between">
+        <div className="flex flex-1 flex-col gap-3 sm:gap-4 sm:flex-row">
+          <div className="flex-1 min-w-0">
             <Input
               placeholder="제목 또는 내용 검색..."
               value={search}
@@ -55,7 +55,11 @@ export default function TableToolbar({
           </div>
         </div>
 
-        <Button onClick={onCreatePost} variant="primary">
+        <Button
+          onClick={onCreatePost}
+          variant="primary"
+          className="w-full sm:w-auto"
+        >
           + 새 게시글
         </Button>
       </div>
@@ -63,26 +67,28 @@ export default function TableToolbar({
       {/* Mock Data 토글 */}
       {onMockDataToggle && (
         <div className="flex items-center gap-3 rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 dark:border-gray-700 dark:bg-gray-800">
-          <label className="flex items-center gap-3 cursor-pointer">
-            <input
-              type="checkbox"
-              checked={useMockData}
-              onChange={(e) => {
-                // console.log("🎯 Mock 데이터 토글:", e.target.checked);
-                onMockDataToggle(e.target.checked);
-              }}
-              className="h-5 w-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700"
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+              목업 데이터
+            </span>
+            <span className="rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-800 dark:bg-blue-900/30 dark:text-blue-400">
+              테스트용
+            </span>
+          </div>
+          <button
+            type="button"
+            onClick={() => onMockDataToggle(!useMockData)}
+            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+              useMockData ? "bg-blue-600" : "bg-gray-300 dark:bg-gray-600"
+            }`}
+          >
+            <span
+              className={`inline-block h-4 w-4 transform rounded-full bg-white shadow-lg transition-transform ${
+                useMockData ? "translate-x-6" : "translate-x-1"
+              }`}
             />
-            <div className="flex items-center gap-2">
-              <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                목업 데이터 사용
-              </span>
-              <span className="rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-800 dark:bg-blue-900/30 dark:text-blue-400">
-                테스트용
-              </span>
-            </div>
-          </label>
-          <span className="ml-auto text-xs text-gray-500 dark:text-gray-400">
+          </button>
+          <span className="text-xs text-gray-500 dark:text-gray-400">
             API: {useMockData ? "/mock/posts" : "/posts"}
           </span>
         </div>

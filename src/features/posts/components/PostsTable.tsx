@@ -25,6 +25,7 @@ import { formatRelativeTime } from "@/lib/utils";
 import { CATEGORY_LABELS } from "@/constants/validation";
 import { Button } from "@/components/ui";
 import { useInView } from "react-intersection-observer";
+import { Eye, EyeOff } from "lucide-react";
 
 interface PostsTableProps {
   filters: {
@@ -95,11 +96,12 @@ export default function PostsTable({
         id: "title",
         accessorKey: "title",
         header: "제목",
-        size: 350,
-        minSize: 200,
+        size: 250,
+        minSize: 150,
+        maxSize: 400,
         enableSorting: true,
         cell: ({ row }) => (
-          <div className="truncate font-medium text-gray-900 dark:text-white pr-4">
+          <div className="max-w-xs truncate font-medium text-gray-900 dark:text-white">
             {row.original?.title || "-"}
           </div>
         ),
@@ -108,11 +110,12 @@ export default function PostsTable({
         id: "body",
         accessorKey: "body",
         header: "내용",
-        size: 450,
-        minSize: 250,
+        size: 300,
+        minSize: 200,
+        maxSize: 500,
         enableSorting: false,
         cell: ({ row }) => (
-          <div className="truncate text-sm text-gray-600 dark:text-gray-400 pr-4">
+          <div className="max-w-md truncate text-sm text-gray-600 dark:text-gray-400">
             {row.original?.body || "-"}
           </div>
         ),
@@ -176,16 +179,16 @@ export default function PostsTable({
         cell: ({ row }) => {
           if (!row.original) return null;
           return (
-            <div className="flex gap-1.5">
+            <div className="flex gap-1">
               <button
                 onClick={() => onEditPost(row.original)}
-                className="rounded px-2.5 py-1 text-sm font-medium text-blue-600 hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-blue-900/20 transition-colors"
+                className="rounded px-2 sm:px-2.5 py-0.5 sm:py-1 text-xs sm:text-sm font-medium text-blue-600 hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-blue-900/20 transition-colors whitespace-nowrap"
               >
                 수정
               </button>
               <button
                 onClick={() => onDeletePost(row.original)}
-                className="rounded px-2.5 py-1 text-sm font-medium text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20 transition-colors"
+                className="rounded px-2 sm:px-2.5 py-0.5 sm:py-1 text-xs sm:text-sm font-medium text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20 transition-colors whitespace-nowrap"
               >
                 삭제
               </button>
@@ -230,43 +233,123 @@ export default function PostsTable({
 
   return (
     <div className="space-y-4">
-      {/* 컬럼 가시성 토글 */}
-      <div className="flex flex-wrap items-center gap-2 rounded-lg border border-gray-200 bg-gradient-to-br from-gray-50 to-gray-100 p-3 dark:border-gray-800 dark:from-gray-900 dark:to-gray-900/50">
-        <div className="flex items-center gap-2 text-sm font-semibold text-gray-700 dark:text-gray-300">
+      {/* 컬럼 가시성 토글 - 데스크톱만 표시 */}
+      <div className="hidden md:flex flex-wrap items-center gap-2 rounded-lg border border-gray-200 bg-gradient-to-br from-gray-50 to-gray-100 p-3 sm:p-4 dark:border-gray-800 dark:from-gray-900 dark:to-gray-900/50">
+        <div className="w-full sm:w-auto flex items-center gap-2 text-sm font-semibold text-gray-700 dark:text-gray-300">
           <span>📋 컬럼 표시:</span>
         </div>
         {table.getAllLeafColumns().map((column) => {
           if (column.id === "actions") return null;
+          const isVisible = column.getIsVisible();
           return (
-            <label
+            <button
               key={column.id}
-              className="flex items-center gap-2 rounded-md border border-gray-300 bg-white px-2.5 py-1.5 text-sm shadow-sm transition-all hover:border-blue-300 hover:shadow-md dark:border-gray-700 dark:bg-gray-800 dark:hover:border-blue-600 cursor-pointer"
+              onClick={column.getToggleVisibilityHandler()}
+              className="flex items-center gap-2 rounded-md border border-gray-300 bg-white px-2.5 py-1.5 text-sm shadow-sm transition-all hover:border-blue-300 hover:shadow-md dark:border-gray-700 dark:bg-gray-800 dark:hover:border-blue-600"
             >
-              <input
-                type="checkbox"
-                checked={column.getIsVisible()}
-                onChange={column.getToggleVisibilityHandler()}
-                className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 dark:border-gray-600"
-              />
-              <span className="font-medium dark:text-gray-300">
+              {isVisible ? (
+                <Eye className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+              ) : (
+                <EyeOff className="h-4 w-4 text-gray-400 dark:text-gray-500" />
+              )}
+              <span
+                className={`${
+                  isVisible
+                    ? "text-gray-700 dark:text-gray-300"
+                    : "text-gray-400 dark:text-gray-500"
+                }`}
+              >
                 {column.columnDef.header as string}
               </span>
-            </label>
+            </button>
           );
         })}
       </div>
 
-      {/* 테이블 */}
-      <div className="overflow-hidden rounded-lg border border-gray-200 shadow-sm dark:border-gray-800">
+      {/* 모바일 카드 뷰 */}
+      <div className="md:hidden space-y-3">
+        {flatData.map((post) => (
+          <div
+            key={post.id}
+            className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-800 dark:bg-gray-950 hover:shadow-md transition-shadow"
+          >
+            {/* 카테고리와 날짜 */}
+            <div className="flex items-center justify-between mb-2">
+              <span
+                className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold ${
+                  post.category === "NOTICE"
+                    ? "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400"
+                    : post.category === "QNA"
+                    ? "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400"
+                    : "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400"
+                }`}
+              >
+                {CATEGORY_LABELS[post.category]}
+              </span>
+              <span className="text-xs text-gray-500 dark:text-gray-400">
+                {formatRelativeTime(post.createdAt)}
+              </span>
+            </div>
+
+            {/* 제목 */}
+            <h3 className="font-semibold text-gray-900 dark:text-white mb-2 line-clamp-2">
+              {post.title}
+            </h3>
+
+            {/* 내용 */}
+            <p className="text-sm text-gray-600 dark:text-gray-400 mb-3 line-clamp-2">
+              {post.body}
+            </p>
+
+            {/* 태그 */}
+            {post.tags && post.tags.length > 0 && (
+              <div className="flex flex-wrap gap-1 mb-3">
+                {post.tags.slice(0, 3).map((tag, i) => (
+                  <span
+                    key={i}
+                    className="inline-flex rounded bg-gray-100 px-2 py-0.5 text-xs text-gray-600 dark:bg-gray-800 dark:text-gray-300"
+                  >
+                    #{tag}
+                  </span>
+                ))}
+                {post.tags.length > 3 && (
+                  <span className="text-xs text-gray-400">
+                    +{post.tags.length - 3}
+                  </span>
+                )}
+              </div>
+            )}
+
+            {/* 작업 버튼 */}
+            <div className="flex gap-2 pt-3 border-t border-gray-100 dark:border-gray-800">
+              <button
+                onClick={() => onEditPost(post)}
+                className="flex-1 rounded px-3 py-1.5 text-sm font-medium text-blue-600 hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-blue-900/20 transition-colors"
+              >
+                수정
+              </button>
+              <button
+                onClick={() => onDeletePost(post)}
+                className="flex-1 rounded px-3 py-1.5 text-sm font-medium text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20 transition-colors"
+              >
+                삭제
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* 데스크톱 테이블 뷰 */}
+      <div className="hidden md:block overflow-hidden rounded-lg border border-gray-200 shadow-sm dark:border-gray-800">
         <div className="overflow-x-auto">
-          <table className="w-full table-fixed">
+          <table className="w-full" style={{ minWidth: "800px" }}>
             <thead className="bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-900/80">
               {table.getHeaderGroups().map((headerGroup) => (
                 <tr key={headerGroup.id}>
                   {headerGroup.headers.map((header) => (
                     <th
                       key={header.id}
-                      className="relative border-b-2 border-gray-200 px-4 py-3.5 text-left text-sm font-bold text-gray-900 dark:border-gray-700 dark:text-white"
+                      className="relative border-b-2 border-gray-200 px-2 sm:px-4 py-2.5 sm:py-3.5 text-left text-xs sm:text-sm font-bold text-gray-900 dark:border-gray-700 dark:text-white"
                       style={{
                         width: header.getSize(),
                       }}
@@ -327,7 +410,7 @@ export default function PostsTable({
                   {row.getVisibleCells().map((cell) => (
                     <td
                       key={cell.id}
-                      className="px-4 py-3.5 text-sm"
+                      className="px-2 sm:px-4 py-2.5 sm:py-3.5 text-sm"
                       style={{
                         width: cell.column.getSize(),
                       }}

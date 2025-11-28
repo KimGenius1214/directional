@@ -24,6 +24,7 @@ export const useAuthStore = create<AuthStore>()((set) => ({
     // 쿠키에 저장
     authCookies.setToken(token);
     authCookies.setUserId(user.id);
+    authCookies.setUserEmail(user.email);
 
     set({
       token,
@@ -56,11 +57,12 @@ export const useAuthStore = create<AuthStore>()((set) => ({
 
     const token = authCookies.getToken();
     const userId = authCookies.getUserId();
+    const userEmail = authCookies.getUserEmail();
 
     if (token && userId) {
       set({
         token,
-        user: { id: userId, email: "" }, // 이메일은 필요시 API로 가져오기
+        user: { id: userId, email: userEmail || "" },
         isAuthenticated: true,
         isInitialized: true,
       });

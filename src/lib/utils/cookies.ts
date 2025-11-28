@@ -9,6 +9,7 @@ const cookies = new Cookies();
 const COOKIE_NAMES = {
   AUTH_TOKEN: "auth_token",
   USER_ID: "user_id",
+  USER_EMAIL: "user_email",
 } as const;
 
 const COOKIE_OPTIONS = {
@@ -48,11 +49,26 @@ export const authCookies = {
   },
 
   /**
+   * 사용자 이메일 저장
+   */
+  setUserEmail: (email: string) => {
+    cookies.set(COOKIE_NAMES.USER_EMAIL, email, COOKIE_OPTIONS);
+  },
+
+  /**
+   * 사용자 이메일 가져오기
+   */
+  getUserEmail: (): string | undefined => {
+    return cookies.get(COOKIE_NAMES.USER_EMAIL);
+  },
+
+  /**
    * 모든 인증 정보 삭제
    */
   clear: () => {
     cookies.remove(COOKIE_NAMES.AUTH_TOKEN, { path: "/" });
     cookies.remove(COOKIE_NAMES.USER_ID, { path: "/" });
+    cookies.remove(COOKIE_NAMES.USER_EMAIL, { path: "/" });
   },
 
   /**
