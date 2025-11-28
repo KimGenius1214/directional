@@ -26,8 +26,13 @@ interface LineConfig {
   shape?: "circle" | "square";
 }
 
+interface DataItem {
+  [key: string]: string | number;
+  team: string;
+}
+
 interface MultiLineChartProps {
-  data: any[];
+  data: DataItem[];
   xAxisKey: string;
   xAxisLabel: string;
   leftYAxisLabel: string;
@@ -36,12 +41,28 @@ interface MultiLineChartProps {
   chartId: string;
 }
 
-const CustomTooltip = ({ active, payload, label }: any) => {
+interface TooltipPayload {
+  color: string;
+  dataKey: string;
+  name: string;
+  value: number;
+  payload?: {
+    team?: string;
+  };
+}
+
+interface CustomTooltipProps {
+  active?: boolean;
+  payload?: TooltipPayload[];
+  label?: string | number;
+}
+
+const CustomTooltip = ({ active, payload, label }: CustomTooltipProps) => {
   if (!active || !payload || !payload.length) return null;
 
   // 같은 팀의 데이터만 표시
   const team = payload[0]?.payload?.team;
-  const teamData = payload.filter((p: any) => p.payload?.team === team);
+  const teamData = payload.filter((p) => p.payload?.team === team);
 
   if (teamData.length === 0) return null;
 
@@ -51,7 +72,7 @@ const CustomTooltip = ({ active, payload, label }: any) => {
       <p className="mb-1 text-sm text-gray-600 dark:text-gray-400">
         {`${payload[0]?.name}: ${label}`}
       </p>
-      {teamData.map((entry: any, index: number) => (
+      {teamData.map((entry, index: number) => (
         <p key={index} className="text-sm" style={{ color: entry.color }}>
           {`${entry.dataKey}: ${entry.value}`}
         </p>
@@ -82,7 +103,7 @@ export default function MultiLineChart({
   const teams = Array.from(new Set(data.map((d) => d.team)));
 
   // X축 기준으로 데이터를 병합 (팀별로 분리된 데이터를 하나의 X축 값으로 합침)
-  const mergedData = data.reduce((acc: any[], item: any) => {
+  const mergedData = data.reduce((acc: DataItem[], item: DataItem) => {
     const existing = acc.find((d) => d[xAxisKey] === item[xAxisKey]);
     if (existing) {
       // 같은 X축 값이 있으면 팀별 데이터 추가
@@ -93,7 +114,10 @@ export default function MultiLineChart({
       });
     } else {
       // 새로운 X축 값이면 새 객체 생성
-      const newItem: any = { [xAxisKey]: item[xAxisKey] };
+      const newItem: DataItem = {
+        [xAxisKey]: item[xAxisKey],
+        team: item.team,
+      };
       Object.keys(item).forEach((key) => {
         if (key !== xAxisKey && key !== "team") {
           newItem[`${item.team}-${key}`] = item[key];
@@ -105,7 +129,7 @@ export default function MultiLineChart({
   }, []);
 
   // X축 값으로 정렬
-  mergedData.sort((a, b) => a[xAxisKey] - b[xAxisKey]);
+  mergedData.sort((a, b) => Number(a[xAxisKey]) - Number(b[xAxisKey]));
 
   return (
     <div className="space-y-4">

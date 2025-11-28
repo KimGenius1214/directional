@@ -16,8 +16,12 @@ import {
 } from "recharts";
 import { useChartLegend } from "../hooks/use-chart-legend";
 
+interface DataItem {
+  [key: string]: string | number;
+}
+
 interface StackedAreaChartProps {
-  data: any[];
+  data: DataItem[];
   xAxisKey: string;
   stackKeys: { key: string; color: string; label: string }[];
   chartId: string;
@@ -36,12 +40,15 @@ export default function StackedAreaChart({
 
   // 백분율로 변환
   const percentageData = data.map((item) => {
-    const total = stackKeys.reduce((sum, key) => sum + (item[key.key] || 0), 0);
-    const percentageItem: any = { [xAxisKey]: item[xAxisKey] };
+    const total = stackKeys.reduce(
+      (sum, key) => sum + (Number(item[key.key]) || 0),
+      0
+    );
+    const percentageItem: DataItem = { [xAxisKey]: item[xAxisKey] };
 
     stackKeys.forEach((key) => {
       percentageItem[key.key] =
-        total > 0 ? ((item[key.key] || 0) / total) * 100 : 0;
+        total > 0 ? ((Number(item[key.key]) || 0) / total) * 100 : 0;
     });
 
     return percentageItem;
@@ -104,7 +111,7 @@ export default function StackedAreaChart({
               borderRadius: "8px",
               boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
             }}
-            formatter={(value: any) => `${value.toFixed(1)}%`}
+            formatter={(value: number) => `${value.toFixed(1)}%`}
           />
           <Legend content={() => null} />
           {stackKeys.map((stack) => {
