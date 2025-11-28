@@ -37,17 +37,6 @@ export default function PostsPage() {
     }
   }, [isAuthenticated, router]);
 
-  // 로딩 상태 표시
-  if (!isAuthenticated) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-gray-50 dark:bg-gray-900">
-        <div className="text-gray-500 dark:text-gray-400">
-          로그인 페이지로 이동 중...
-        </div>
-      </div>
-    );
-  }
-
   const handleCreatePost = () => {
     setEditingPost(null);
     setIsModalOpen(true);
@@ -83,6 +72,17 @@ export default function PostsPage() {
     category: category || undefined,
   };
 
+  // 로딩 상태 표시
+  if (!isAuthenticated) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-gray-50 dark:bg-gray-900">
+        <div className="text-gray-500 dark:text-gray-400">
+          로그인 페이지로 이동 중...
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex h-screen overflow-hidden">
       <Sidebar />
@@ -94,7 +94,7 @@ export default function PostsPage() {
             <div className="flex items-center justify-between">
               <div>
                 <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-                  📝 게시판
+                  게시판
                 </h1>
                 <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
                   게시글을 작성하고 관리하세요
@@ -106,7 +106,7 @@ export default function PostsPage() {
 
         {/* Content */}
         <div className="px-4 py-6 sm:px-6 lg:px-8">
-          <div className="mx-auto max-w-7xl space-y-6">
+          <div className="mx-auto max-w-full space-y-6">
             {/* 툴바 */}
             <TableToolbar
               search={search}

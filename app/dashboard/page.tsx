@@ -20,6 +20,21 @@ export default function DashboardPage() {
   const coffeeBrands = useTopCoffeeBrands();
   const snackBrands = usePopularSnackBrands();
 
+  // 디버깅
+  console.log("📊 Dashboard - Coffee Brands:", {
+    isLoading: coffeeBrands.isLoading,
+    isError: coffeeBrands.isError,
+    error: coffeeBrands.error,
+    data: coffeeBrands.data,
+  });
+
+  console.log("📊 Dashboard - Snack Brands:", {
+    isLoading: snackBrands.isLoading,
+    isError: snackBrands.isError,
+    error: snackBrands.error,
+    data: snackBrands.data,
+  });
+
   // 차트 데이터 변환
   const coffeeChartData = coffeeBrands.data?.data?.map((item) => ({
     brand: item.brand,
@@ -71,13 +86,21 @@ export default function DashboardPage() {
                   description="각 브랜드별 인기도"
                   isLoading={coffeeBrands.isLoading}
                 >
-                  {coffeeChartData && (
+                  {coffeeBrands.isError ? (
+                    <div className="flex h-64 items-center justify-center text-red-500">
+                      <p>데이터를 불러오는데 실패했습니다.</p>
+                    </div>
+                  ) : coffeeChartData ? (
                     <SimpleBarChart
                       data={coffeeChartData}
                       dataKey="count"
                       xAxisKey="brand"
                       color="#8884d8"
                     />
+                  ) : (
+                    <div className="flex h-64 items-center justify-center text-gray-500">
+                      <p>데이터가 없습니다.</p>
+                    </div>
                   )}
                 </ChartCard>
 
@@ -87,8 +110,16 @@ export default function DashboardPage() {
                   description="브랜드별 점유율"
                   isLoading={coffeeBrands.isLoading}
                 >
-                  {coffeeChartData && (
+                  {coffeeBrands.isError ? (
+                    <div className="flex h-64 items-center justify-center text-red-500">
+                      <p>데이터를 불러오는데 실패했습니다.</p>
+                    </div>
+                  ) : coffeeChartData ? (
                     <SimpleDonutChart data={coffeeChartData} />
+                  ) : (
+                    <div className="flex h-64 items-center justify-center text-gray-500">
+                      <p>데이터가 없습니다.</p>
+                    </div>
                   )}
                 </ChartCard>
 
@@ -98,13 +129,21 @@ export default function DashboardPage() {
                   description="각 브랜드별 인기도"
                   isLoading={snackBrands.isLoading}
                 >
-                  {snackChartData && (
+                  {snackBrands.isError ? (
+                    <div className="flex h-64 items-center justify-center text-red-500">
+                      <p>데이터를 불러오는데 실패했습니다.</p>
+                    </div>
+                  ) : snackChartData ? (
                     <SimpleBarChart
                       data={snackChartData}
                       dataKey="count"
                       xAxisKey="brand"
                       color="#82ca9d"
                     />
+                  ) : (
+                    <div className="flex h-64 items-center justify-center text-gray-500">
+                      <p>데이터가 없습니다.</p>
+                    </div>
                   )}
                 </ChartCard>
 
@@ -114,7 +153,17 @@ export default function DashboardPage() {
                   description="브랜드별 점유율"
                   isLoading={snackBrands.isLoading}
                 >
-                  {snackChartData && <SimpleDonutChart data={snackChartData} />}
+                  {snackBrands.isError ? (
+                    <div className="flex h-64 items-center justify-center text-red-500">
+                      <p>데이터를 불러오는데 실패했습니다.</p>
+                    </div>
+                  ) : snackChartData ? (
+                    <SimpleDonutChart data={snackChartData} />
+                  ) : (
+                    <div className="flex h-64 items-center justify-center text-gray-500">
+                      <p>데이터가 없습니다.</p>
+                    </div>
+                  )}
                 </ChartCard>
               </div>
             </div>

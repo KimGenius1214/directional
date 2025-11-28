@@ -1,0 +1,60 @@
+/**
+ * Next.js 미들웨어 - 인증 확인
+ */
+
+import { NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
+
+// 보호된 경로 (인증 필요)
+const PROTECTED_PATHS = ["/dashboard", "/posts"];
+
+// 인증된 사용자는 접근 불가 (로그인 페이지)
+const AUTH_PATHS = ["/login"];
+
+export function middleware(request: NextRequest) {
+  const { pathname } = request.nextUrl;
+
+  // 쿠키에서 토큰 확인
+  const token = request.cookies.get("auth_token")?.value;
+  const isAuthenticated = !!token;
+
+  console.log("🛡️ Middleware:", {
+    path: pathname,
+    isAuthenticated,
+    hasToken: !!token,
+  });
+
+  // 보호된 경로 체크
+  if (PROTECTED_PATHS.some((path) => pathname.startsWith(path))) {
+    if (!isAuthenticated) {
+      console.log("🚫 Redirecting to /login - Not authenticated");
+      const loginUrl = new URL("/login", request.url);
+      loginUrl.searchParams.set("redirect", pathname);
+      return NextResponse.redirect(loginUrl);
+    }
+  }
+
+  // 인증 페이지 체크 (이미 로그인한 사용자)
+  if (AUTH_PATHS.some((path) => pathname.startsWith(path))) {
+    if (isAuthenticated) {
+      console.log("✅ Redirecting to /dashboard - Already authenticated");
+      return NextResponse.redirect(new URL("/dashboard", request.url));
+    }
+  }
+
+  return NextResponse.next();
+}
+
+// 미들웨어가 실행될 경로 설정
+export const config = {
+  matcher: [
+    /*
+     * 다음을 제외한 모든 경로에서 실행:
+     * - api (API routes)
+     * - _next/static (static files)
+     * - _next/image (image optimization files)
+     * - favicon.ico (favicon file)
+     */
+    "/((?!api|_next/static|_next/image|favicon.ico|.*\\..*|_next).*)",
+  ],
+};

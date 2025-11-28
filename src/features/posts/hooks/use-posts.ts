@@ -12,16 +12,25 @@ import { postsApi } from "@/lib/api/endpoints";
 import type { PostFilters, CreatePostDto, UpdatePostDto } from "@/types/post";
 
 /**
- * 게시글 무한 스크롤 조회
+ * 게시글 무한 스크롤 조회 (Cursor 기반)
  */
 export const usePosts = (filters: PostFilters = {}) => {
+  console.log("🔎 usePosts - Called with filters:", filters);
+
   return useInfiniteQuery({
     queryKey: ["posts", filters],
-    queryFn: ({ pageParam = 1 }) =>
-      postsApi.getPosts({ ...filters, page: pageParam, limit: 20 }),
-    getNextPageParam: (lastPage) =>
-      lastPage.hasMore ? lastPage.page + 1 : undefined,
-    initialPageParam: 1,
+    queryFn: ({ pageParam }) => {
+      console.log("🔎 usePosts - queryFn called with cursor:", pageParam);
+      return postsApi.getPosts({ ...filters, cursor: pageParam, limit: 20 });
+    },
+    getNextPageParam: (lastPage) => {
+      console.log("🔎 usePosts - getNextPageParam:", {
+        nextCursor: lastPage.nextCursor,
+        itemsCount: lastPage.items.length,
+      });
+      return lastPage.nextCursor;
+    },
+    initialPageParam: null as string | null,
   });
 };
 

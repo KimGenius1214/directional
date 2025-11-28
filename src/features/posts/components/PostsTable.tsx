@@ -1,5 +1,9 @@
 /**
- * PostsTable - getValue 에러 수정
+ * PostsTable - 게시글 테이블 컴포넌트
+ * - 컬럼 리사이징
+ * - 컬럼 가시성 토글
+ * - 정렬 기능
+ * - 무한스크롤 페이지네이션
  */
 
 "use client";
@@ -13,6 +17,7 @@ import {
   type ColumnDef,
   type SortingState,
   type VisibilityState,
+  type ColumnResizeMode,
 } from "@tanstack/react-table";
 import { usePosts } from "../hooks";
 import type { Post, PostCategory } from "@/types/post";
@@ -40,6 +45,7 @@ export default function PostsTable({
 
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
+  const [columnResizeMode] = useState<ColumnResizeMode>("onChange");
   const { ref, inView } = useInView();
 
   useEffect(() => {
@@ -49,7 +55,10 @@ export default function PostsTable({
   }, [inView, hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   const flatData = useMemo(() => {
-    return data?.pages?.flatMap((page) => page.posts) ?? [];
+    const posts =
+      data?.pages?.flatMap((page) => page.items).filter(Boolean) ?? [];
+    console.log("📊 PostsTable - Loaded posts:", posts.length, posts);
+    return posts;
   }, [data]);
 
   const columns = useMemo<ColumnDef<Post>[]>(
@@ -58,7 +67,12 @@ export default function PostsTable({
         id: "category",
         accessorKey: "category",
         header: "카테고리",
+        size: 110,
+        minSize: 100,
+        maxSize: 150,
+        enableSorting: true,
         cell: ({ row }) => {
+          if (!row.original) return null;
           const category = row.original.category;
           const colors: Record<PostCategory, string> = {
             NOTICE:
@@ -68,7 +82,7 @@ export default function PostsTable({
           };
           return (
             <span
-              className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${colors[category]}`}
+              className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold whitespace-nowrap ${colors[category]}`}
             >
               {CATEGORY_LABELS[category]}
             </span>
@@ -79,9 +93,12 @@ export default function PostsTable({
         id: "title",
         accessorKey: "title",
         header: "제목",
+        size: 350,
+        minSize: 200,
+        enableSorting: true,
         cell: ({ row }) => (
-          <div className="max-w-md truncate font-medium text-gray-900 dark:text-white">
-            {row.original.title}
+          <div className="truncate font-medium text-gray-900 dark:text-white pr-4">
+            {row.original?.title || "-"}
           </div>
         ),
       },
@@ -89,9 +106,12 @@ export default function PostsTable({
         id: "body",
         accessorKey: "body",
         header: "내용",
+        size: 450,
+        minSize: 250,
+        enableSorting: false,
         cell: ({ row }) => (
-          <div className="max-w-lg truncate text-sm text-gray-600 dark:text-gray-400">
-            {row.original.body}
+          <div className="truncate text-sm text-gray-600 dark:text-gray-400 pr-4">
+            {row.original?.body || "-"}
           </div>
         ),
       },
@@ -99,22 +119,28 @@ export default function PostsTable({
         id: "tags",
         accessorKey: "tags",
         header: "태그",
+        size: 180,
+        minSize: 120,
+        maxSize: 250,
+        enableSorting: false,
         cell: ({ row }) => {
-          const tags = row.original.tags;
-          if (!tags || tags.length === 0) return null;
+          const tags = row.original?.tags;
+          if (!tags || tags.length === 0) {
+            return <span className="text-xs text-gray-400">-</span>;
+          }
           return (
             <div className="flex flex-wrap gap-1">
-              {tags.slice(0, 3).map((tag, i) => (
+              {tags.slice(0, 2).map((tag, i) => (
                 <span
                   key={i}
-                  className="inline-flex rounded bg-gray-100 px-2 py-0.5 text-xs text-gray-600 dark:bg-gray-800 dark:text-gray-300"
+                  className="inline-flex rounded bg-gray-100 px-2 py-0.5 text-xs text-gray-600 dark:bg-gray-800 dark:text-gray-300 whitespace-nowrap"
                 >
                   #{tag}
                 </span>
               ))}
-              {tags.length > 3 && (
+              {tags.length > 2 && (
                 <span className="text-xs text-gray-400">
-                  +{tags.length - 3}
+                  +{tags.length - 2}
                 </span>
               )}
             </div>
@@ -125,31 +151,45 @@ export default function PostsTable({
         id: "createdAt",
         accessorKey: "createdAt",
         header: "작성일",
+        size: 140,
+        minSize: 120,
+        maxSize: 180,
+        enableSorting: true,
         cell: ({ row }) => (
-          <span className="text-sm text-gray-500 dark:text-gray-400">
-            {formatRelativeTime(row.original.createdAt)}
+          <span className="text-sm text-gray-500 dark:text-gray-400 whitespace-nowrap">
+            {row.original?.createdAt
+              ? formatRelativeTime(row.original.createdAt)
+              : "-"}
           </span>
         ),
       },
       {
         id: "actions",
         header: "작업",
-        cell: ({ row }) => (
-          <div className="flex gap-2">
-            <button
-              onClick={() => onEditPost(row.original)}
-              className="rounded px-3 py-1 text-sm text-blue-600 hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-blue-900/20"
-            >
-              수정
-            </button>
-            <button
-              onClick={() => onDeletePost(row.original)}
-              className="rounded px-3 py-1 text-sm text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20"
-            >
-              삭제
-            </button>
-          </div>
-        ),
+        size: 140,
+        minSize: 120,
+        maxSize: 160,
+        enableSorting: false,
+        enableResizing: false,
+        cell: ({ row }) => {
+          if (!row.original) return null;
+          return (
+            <div className="flex gap-1.5">
+              <button
+                onClick={() => onEditPost(row.original)}
+                className="rounded px-2.5 py-1 text-sm font-medium text-blue-600 hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-blue-900/20 transition-colors"
+              >
+                수정
+              </button>
+              <button
+                onClick={() => onDeletePost(row.original)}
+                className="rounded px-2.5 py-1 text-sm font-medium text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20 transition-colors"
+              >
+                삭제
+              </button>
+            </div>
+          );
+        },
       },
     ],
     [onEditPost, onDeletePost]
@@ -163,6 +203,8 @@ export default function PostsTable({
     onColumnVisibilityChange: setColumnVisibility,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
+    enableColumnResizing: true,
+    columnResizeMode,
   });
 
   if (isLoading) {
@@ -186,22 +228,25 @@ export default function PostsTable({
 
   return (
     <div className="space-y-4">
-      {/* 컬럼 토글 */}
-      <div className="flex flex-wrap gap-2">
+      {/* 컬럼 가시성 토글 */}
+      <div className="flex flex-wrap items-center gap-2 rounded-lg border border-gray-200 bg-gradient-to-br from-gray-50 to-gray-100 p-3 dark:border-gray-800 dark:from-gray-900 dark:to-gray-900/50">
+        <div className="flex items-center gap-2 text-sm font-semibold text-gray-700 dark:text-gray-300">
+          <span>📋 컬럼 표시:</span>
+        </div>
         {table.getAllLeafColumns().map((column) => {
           if (column.id === "actions") return null;
           return (
             <label
               key={column.id}
-              className="flex items-center gap-2 rounded-md border border-gray-300 bg-white px-3 py-1.5 text-sm hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-900 dark:hover:bg-gray-800 cursor-pointer"
+              className="flex items-center gap-2 rounded-md border border-gray-300 bg-white px-2.5 py-1.5 text-sm shadow-sm transition-all hover:border-blue-300 hover:shadow-md dark:border-gray-700 dark:bg-gray-800 dark:hover:border-blue-600 cursor-pointer"
             >
               <input
                 type="checkbox"
                 checked={column.getIsVisible()}
                 onChange={column.getToggleVisibilityHandler()}
-                className="rounded"
+                className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 dark:border-gray-600"
               />
-              <span className="dark:text-gray-300">
+              <span className="font-medium dark:text-gray-300">
                 {column.columnDef.header as string}
               </span>
             </label>
@@ -210,49 +255,102 @@ export default function PostsTable({
       </div>
 
       {/* 테이블 */}
-      <div className="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-800">
-        <table className="w-full">
-          <thead className="bg-gray-50 dark:bg-gray-900">
-            {table.getHeaderGroups().map((headerGroup) => (
-              <tr key={headerGroup.id}>
-                {headerGroup.headers.map((header) => (
-                  <th
-                    key={header.id}
-                    className="border-b border-gray-200 px-4 py-3 text-left text-sm font-semibold text-gray-900 dark:border-gray-800 dark:text-white"
-                  >
-                    {header.isPlaceholder
-                      ? null
-                      : flexRender(
-                          header.column.columnDef.header,
-                          header.getContext()
+      <div className="overflow-hidden rounded-lg border border-gray-200 shadow-sm dark:border-gray-800">
+        <div className="overflow-x-auto">
+          <table className="w-full table-fixed">
+            <thead className="bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-900/80">
+              {table.getHeaderGroups().map((headerGroup) => (
+                <tr key={headerGroup.id}>
+                  {headerGroup.headers.map((header) => (
+                    <th
+                      key={header.id}
+                      className="relative border-b-2 border-gray-200 px-4 py-3.5 text-left text-sm font-bold text-gray-900 dark:border-gray-700 dark:text-white"
+                      style={{
+                        width: header.getSize(),
+                      }}
+                    >
+                      <div className="flex items-center gap-2">
+                        {header.isPlaceholder ? null : (
+                          <div
+                            className={
+                              header.column.getCanSort()
+                                ? "cursor-pointer select-none flex items-center gap-1 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+                                : "flex items-center gap-1"
+                            }
+                            onClick={header.column.getToggleSortingHandler()}
+                          >
+                            {flexRender(
+                              header.column.columnDef.header,
+                              header.getContext()
+                            )}
+                            {header.column.getCanSort() && (
+                              <span className="text-gray-400 text-base">
+                                {{
+                                  asc: "↑",
+                                  desc: "↓",
+                                }[header.column.getIsSorted() as string] ?? "⇅"}
+                              </span>
+                            )}
+                          </div>
                         )}
-                  </th>
-                ))}
-              </tr>
-            ))}
-          </thead>
-          <tbody className="divide-y divide-gray-200 bg-white dark:divide-gray-800 dark:bg-gray-950">
-            {table.getRowModel().rows.map((row) => (
-              <tr
-                key={row.id}
-                className="hover:bg-gray-50 dark:hover:bg-gray-900/50"
-              >
-                {row.getVisibleCells().map((cell) => (
-                  <td key={cell.id} className="px-4 py-3 text-sm">
-                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                  </td>
-                ))}
-              </tr>
-            ))}
-          </tbody>
-        </table>
+                      </div>
+                      {/* 리사이저 */}
+                      {header.column.getCanResize() && (
+                        <div
+                          onMouseDown={header.getResizeHandler()}
+                          onTouchStart={header.getResizeHandler()}
+                          className={`absolute right-0 top-0 h-full w-0.5 cursor-col-resize select-none touch-none transition-all ${
+                            header.column.getIsResizing()
+                              ? "bg-blue-500 w-2 opacity-100 shadow-lg"
+                              : "bg-gray-400 opacity-40 hover:opacity-100 hover:bg-blue-400 hover:w-2 dark:bg-gray-500"
+                          }`}
+                        >
+                          {/* 리사이저 핸들 표시 */}
+                          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 flex flex-col gap-0.5">
+                            <div className="w-[1px] h-3 bg-white/80 rounded-full"></div>
+                          </div>
+                        </div>
+                      )}
+                    </th>
+                  ))}
+                </tr>
+              ))}
+            </thead>
+            <tbody className="divide-y divide-gray-100 bg-white dark:divide-gray-800 dark:bg-gray-950">
+              {table.getRowModel().rows.map((row) => (
+                <tr
+                  key={row.id}
+                  className="hover:bg-blue-50/50 dark:hover:bg-gray-900/70 transition-colors"
+                >
+                  {row.getVisibleCells().map((cell) => (
+                    <td
+                      key={cell.id}
+                      className="px-4 py-3.5 text-sm"
+                      style={{
+                        width: cell.column.getSize(),
+                      }}
+                    >
+                      {flexRender(
+                        cell.column.columnDef.cell,
+                        cell.getContext()
+                      )}
+                    </td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
 
       {/* 무한 스크롤 */}
       {hasNextPage && (
         <div ref={ref} className="flex justify-center py-4">
           {isFetchingNextPage ? (
-            <div className="text-sm text-gray-500">더 불러오는 중...</div>
+            <div className="flex items-center gap-2 text-sm text-gray-500">
+              <div className="h-4 w-4 animate-spin rounded-full border-2 border-gray-300 border-t-blue-600"></div>
+              <span>더 불러오는 중...</span>
+            </div>
           ) : (
             <Button onClick={() => fetchNextPage()} variant="outline">
               더 보기

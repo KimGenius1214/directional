@@ -2,33 +2,38 @@
  * 게시글 API 엔드포인트
  */
 
-import { apiClient } from '../client';
-import { API_ENDPOINTS } from '@/constants/api';
+import { apiClient } from "../client";
+import { API_ENDPOINTS } from "@/constants/api";
 import type {
   Post,
   CreatePostDto,
   UpdatePostDto,
   PostFilters,
   PostsResponse,
-} from '@/types/post';
+} from "@/types/post";
 
 export const postsApi = {
   /**
-   * 게시글 목록 조회
+   * 게시글 목록 조회 (Cursor 기반 페이지네이션)
    */
   getPosts: async (filters: PostFilters = {}): Promise<PostsResponse> => {
     const params = new URLSearchParams();
-    
-    if (filters.search) params.append('search', filters.search);
-    if (filters.category) params.append('category', filters.category);
-    if (filters.sortBy) params.append('sortBy', filters.sortBy);
-    if (filters.sortOrder) params.append('sortOrder', filters.sortOrder);
-    if (filters.page) params.append('page', filters.page.toString());
-    if (filters.limit) params.append('limit', filters.limit.toString());
+
+    if (filters.search) params.append("search", filters.search);
+    if (filters.category) params.append("category", filters.category);
+    if (filters.sortBy) params.append("sortBy", filters.sortBy);
+    if (filters.sortOrder) params.append("sortOrder", filters.sortOrder);
+    if (filters.cursor) params.append("cursor", filters.cursor);
+    if (filters.limit) params.append("limit", filters.limit.toString());
+
+    console.log("📝 getPosts - Filters:", filters);
+    console.log("📝 getPosts - Query params:", params.toString());
 
     const response = await apiClient.get<PostsResponse>(
       `${API_ENDPOINTS.POSTS.BASE}?${params.toString()}`
     );
+
+    console.log("📝 getPosts - Response:", response.data);
     return response.data;
   },
 
@@ -36,9 +41,7 @@ export const postsApi = {
    * 게시글 상세 조회
    */
   getPost: async (id: string): Promise<Post> => {
-    const response = await apiClient.get<Post>(
-      API_ENDPOINTS.POSTS.BY_ID(id)
-    );
+    const response = await apiClient.get<Post>(API_ENDPOINTS.POSTS.BY_ID(id));
     return response.data;
   },
 
@@ -46,10 +49,7 @@ export const postsApi = {
    * 게시글 작성
    */
   createPost: async (data: CreatePostDto): Promise<Post> => {
-    const response = await apiClient.post<Post>(
-      API_ENDPOINTS.POSTS.BASE,
-      data
-    );
+    const response = await apiClient.post<Post>(API_ENDPOINTS.POSTS.BASE, data);
     return response.data;
   },
 
@@ -71,4 +71,3 @@ export const postsApi = {
     await apiClient.delete(API_ENDPOINTS.POSTS.BY_ID(id));
   },
 };
-

@@ -4,8 +4,8 @@
 
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useAuthStore } from "@/lib/store";
 import { authApi } from "@/lib/api/endpoints";
 import {
@@ -23,12 +23,22 @@ import Link from "next/link";
 
 export default function LoginPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const login = useAuthStore((state) => state.login);
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
+
+  // 이미 로그인된 경우 리다이렉트
+  useEffect(() => {
+    if (isAuthenticated) {
+      const redirect = searchParams.get("redirect") || "/dashboard";
+      router.push(redirect);
+    }
+  }, [isAuthenticated, router, searchParams]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -38,7 +48,10 @@ export default function LoginPage() {
     try {
       const response = await authApi.login({ email, password });
       login(response.token, response.user);
-      router.push("/posts");
+
+      // 리다이렉트 URL이 있으면 해당 페이지로, 없으면 대시보드로
+      const redirect = searchParams.get("redirect") || "/dashboard";
+      router.push(redirect);
     } catch (err: unknown) {
       console.error("Login error:", err);
       if (err instanceof AxiosError) {
@@ -119,25 +132,6 @@ export default function LoginPage() {
                 ← 홈으로 돌아가기
               </Link>
             </div>
-
-            {/* Test Account Info */}
-            <Alert variant="default">
-              <div className="text-xs space-y-1">
-                <p className="font-semibold">💡 테스트 계정 정보</p>
-                <p>
-                  API 문서(
-                  <a
-                    href="https://fe-hiring-rest-api.vercel.app/docs"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="underline hover:text-blue-700 dark:hover:text-blue-300"
-                  >
-                    링크
-                  </a>
-                  )에서 확인하세요
-                </p>
-              </div>
-            </Alert>
           </CardContent>
         </Card>
       </div>
