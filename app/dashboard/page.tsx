@@ -44,6 +44,138 @@ const ChartLoader = () => (
   </div>
 );
 
+// 기본 색상 팔레트
+const DEFAULT_COLORS = [
+  "#3b82f6", // blue
+  "#10b981", // green
+  "#f59e0b", // amber
+  "#ef4444", // red
+  "#8b5cf6", // purple
+  "#ec4899", // pink
+  "#06b6d4", // cyan
+  "#84cc16", // lime
+  "#f97316", // orange
+  "#6366f1", // indigo
+];
+
+// 키 이름을 한글 라벨로 변환하는 매핑
+const KEY_LABEL_MAP: Record<string, string> = {
+  happy: "행복",
+  tired: "피곤",
+  stressed: "스트레스",
+  running: "러닝",
+  cycling: "사이클링",
+  stretching: "스트레칭",
+  bugs: "버그",
+  productivity: "생산성",
+  meetingsMissed: "회의불참",
+  morale: "사기",
+};
+
+// 멀티라인 차트 필드 설정
+interface FieldConfig {
+  yAxisId: "left" | "right";
+  shape: "circle" | "square";
+  strokeDasharray?: string;
+}
+
+const FIELD_CONFIG_MAP: Record<string, FieldConfig> = {
+  bugs: { yAxisId: "left", shape: "circle" },
+  productivity: { yAxisId: "right", shape: "square", strokeDasharray: "5 5" },
+  meetingsMissed: { yAxisId: "left", shape: "circle" },
+  morale: { yAxisId: "right", shape: "square", strokeDasharray: "5 5" },
+};
+
+/**
+ * 데이터에서 stackKeys를 동적으로 생성
+ * @param data - 차트 데이터 배열
+ * @param xAxisKey - X축에 사용할 키 (제외할 키)
+ * @returns stackKeys 배열
+ */
+function generateStackKeys(
+  data: Array<Record<string, string | number>>,
+  xAxisKey: string
+): { key: string; color: string; label: string }[] {
+  if (!data || data.length === 0) return [];
+
+  // 첫 번째 데이터 항목에서 모든 키 추출
+  const firstItem = data[0];
+  const keys = Object.keys(firstItem).filter(
+    (key) => key !== xAxisKey && typeof firstItem[key] === "number"
+  );
+
+  return keys.map((key, index) => ({
+    key,
+    color: DEFAULT_COLORS[index % DEFAULT_COLORS.length],
+    label: KEY_LABEL_MAP[key] || key,
+  }));
+}
+
+/**
+ * 멀티라인 차트용 lines를 동적으로 생성
+ * @param data - 차트 데이터 배열
+ * @param xAxisKey - X축에 사용할 키 (제외할 키)
+ * @returns lines 배열
+ */
+function generateMultiLineConfig(
+  data: Array<Record<string, string | number>>,
+  xAxisKey: string
+): Array<{
+  key: string;
+  team: string;
+  color: string;
+  label: string;
+  yAxisId: "left" | "right";
+  strokeDasharray?: string;
+  shape: "circle" | "square";
+}> {
+  if (!data || data.length === 0) return [];
+
+  // 모든 팀 추출
+  const teams = Array.from(
+    new Set(data.map((item) => item.team as string))
+  ).filter(Boolean);
+
+  // 첫 번째 데이터 항목에서 숫자 필드 추출 (xAxisKey와 team 제외)
+  const firstItem = data[0];
+  const numericFields = Object.keys(firstItem).filter(
+    (key) =>
+      key !== xAxisKey && key !== "team" && typeof firstItem[key] === "number"
+  );
+
+  const lines: Array<{
+    key: string;
+    team: string;
+    color: string;
+    label: string;
+    yAxisId: "left" | "right";
+    strokeDasharray?: string;
+    shape: "circle" | "square";
+  }> = [];
+
+  teams.forEach((team, teamIndex) => {
+    numericFields.forEach((field) => {
+      const fieldConfig = FIELD_CONFIG_MAP[field];
+      if (!fieldConfig) return;
+
+      const colorIndex = teamIndex % DEFAULT_COLORS.length;
+      const fieldLabel = KEY_LABEL_MAP[field] || field;
+
+      lines.push({
+        key: field,
+        team,
+        color: DEFAULT_COLORS[colorIndex],
+        label: `${team} - ${fieldLabel}`,
+        yAxisId: fieldConfig.yAxisId,
+        strokeDasharray: fieldConfig.strokeDasharray,
+        shape: fieldConfig.shape,
+      });
+    });
+  });
+
+  return lines;
+}
+
 export default function DashboardPage() {
   // 차트 데이터 조회
   const coffeeBrands = useTopCoffeeBrands();
@@ -100,6 +232,27 @@ export default function DashboardPage() {
         value: item.popularity || item.share || 0,
       }))
     : undefined;
+
+  // 스택형 차트 데이터 변환
+  const moodTrendData =
+    Array.isArray(moodTrend.data) && moodTrend.data.length > 0
+      ? moodTrend.data.map((item) => ({
+          week: item.week,
+          happy: item.happy,
+          tired: item.tired,
+          stressed: item.stressed,
+        }))
+      : undefined;
+
+  const workoutTrendData =
+    Array.isArray(workoutTrend.data) && workoutTrend.data.length > 0
+      ? workoutTrend.data.map((item) => ({
+          week: item.week,
+          running: item.running,
+          cycling: item.cycling,
+          stretching: item.stretching,
+        }))
+      : undefined;
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -253,25 +406,12 @@ export default function DashboardPage() {
                     <div className="flex h-64 items-center justify-center text-red-500">
                       <p>데이터를 불러오는데 실패했습니다.</p>
                     </div>
-                  ) : Array.isArray(moodTrend.data) ? (
+                  ) : moodTrendData ? (
                     <Suspense fallback={<ChartLoader />}>
                       <StackedBarChart
-                        data={moodTrend.data.map((item) => ({
-                          week: item.week,
-                          happy: item.happy,
-                          tired: item.tired,
-                          stressed: item.stressed,
-                        }))}
+                        data={moodTrendData}
                         xAxisKey="week"
-                        stackKeys={[
-                          { key: "happy", color: "#10b981", label: "행복" },
-                          { key: "tired", color: "#f59e0b", label: "피곤" },
-                          {
-                            key: "stressed",
-                            color: "#ef4444",
-                            label: "스트레스",
-                          },
-                        ]}
+                        stackKeys={generateStackKeys(moodTrendData, "week")}
                         chartId="mood-stacked-bar"
                       />
                     </Suspense>
@@ -292,29 +432,12 @@ export default function DashboardPage() {
                     <div className="flex h-64 items-center justify-center text-red-500">
                       <p>데이터를 불러오는데 실패했습니다.</p>
                     </div>
-                  ) : Array.isArray(workoutTrend.data) ? (
+                  ) : workoutTrendData ? (
                     <Suspense fallback={<ChartLoader />}>
                       <StackedBarChart
-                        data={workoutTrend.data.map((item) => ({
-                          week: item.week,
-                          running: item.running,
-                          cycling: item.cycling,
-                          stretching: item.stretching,
-                        }))}
+                        data={workoutTrendData}
                         xAxisKey="week"
-                        stackKeys={[
-                          { key: "running", color: "#3b82f6", label: "러닝" },
-                          {
-                            key: "cycling",
-                            color: "#8b5cf6",
-                            label: "사이클링",
-                          },
-                          {
-                            key: "stretching",
-                            color: "#ec4899",
-                            label: "스트레칭",
-                          },
-                        ]}
+                        stackKeys={generateStackKeys(workoutTrendData, "week")}
                         chartId="workout-stacked-bar"
                       />
                     </Suspense>
@@ -343,25 +466,12 @@ export default function DashboardPage() {
                     <div className="flex h-64 items-center justify-center text-red-500">
                       <p>데이터를 불러오는데 실패했습니다.</p>
                     </div>
-                  ) : Array.isArray(moodTrend.data) ? (
+                  ) : moodTrendData ? (
                     <Suspense fallback={<ChartLoader />}>
                       <StackedAreaChart
-                        data={moodTrend.data.map((item) => ({
-                          week: item.week,
-                          happy: item.happy,
-                          tired: item.tired,
-                          stressed: item.stressed,
-                        }))}
+                        data={moodTrendData}
                         xAxisKey="week"
-                        stackKeys={[
-                          { key: "happy", color: "#10b981", label: "행복" },
-                          { key: "tired", color: "#f59e0b", label: "피곤" },
-                          {
-                            key: "stressed",
-                            color: "#ef4444",
-                            label: "스트레스",
-                          },
-                        ]}
+                        stackKeys={generateStackKeys(moodTrendData, "week")}
                         chartId="mood-stacked-area"
                       />
                     </Suspense>
@@ -382,29 +492,12 @@ export default function DashboardPage() {
                     <div className="flex h-64 items-center justify-center text-red-500">
                       <p>데이터를 불러오는데 실패했습니다.</p>
                     </div>
-                  ) : Array.isArray(workoutTrend.data) ? (
+                  ) : workoutTrendData ? (
                     <Suspense fallback={<ChartLoader />}>
                       <StackedAreaChart
-                        data={workoutTrend.data.map((item) => ({
-                          week: item.week,
-                          running: item.running,
-                          cycling: item.cycling,
-                          stretching: item.stretching,
-                        }))}
+                        data={workoutTrendData}
                         xAxisKey="week"
-                        stackKeys={[
-                          { key: "running", color: "#3b82f6", label: "러닝" },
-                          {
-                            key: "cycling",
-                            color: "#8b5cf6",
-                            label: "사이클링",
-                          },
-                          {
-                            key: "stretching",
-                            color: "#ec4899",
-                            label: "스트레칭",
-                          },
-                        ]}
+                        stackKeys={generateStackKeys(workoutTrendData, "week")}
                         chartId="workout-stacked-area"
                       />
                     </Suspense>
@@ -442,65 +535,10 @@ export default function DashboardPage() {
                         xAxisLabel="커피 섭취량 (잔/일)"
                         leftYAxisLabel="버그 수"
                         rightYAxisLabel="생산성 점수"
-                        lines={[
-                          // Frontend 팀
-                          {
-                            key: "bugs",
-                            team: "Frontend",
-                            color: "#3b82f6",
-                            label: "Frontend - 버그",
-                            yAxisId: "left",
-                            strokeDasharray: undefined,
-                            shape: "circle",
-                          },
-                          {
-                            key: "productivity",
-                            team: "Frontend",
-                            color: "#3b82f6",
-                            label: "Frontend - 생산성",
-                            yAxisId: "right",
-                            strokeDasharray: "5 5",
-                            shape: "square",
-                          },
-                          // Backend 팀
-                          {
-                            key: "bugs",
-                            team: "Backend",
-                            color: "#10b981",
-                            label: "Backend - 버그",
-                            yAxisId: "left",
-                            strokeDasharray: undefined,
-                            shape: "circle",
-                          },
-                          {
-                            key: "productivity",
-                            team: "Backend",
-                            color: "#10b981",
-                            label: "Backend - 생산성",
-                            yAxisId: "right",
-                            strokeDasharray: "5 5",
-                            shape: "square",
-                          },
-                          // AI 팀
-                          {
-                            key: "bugs",
-                            team: "AI",
-                            color: "#8b5cf6",
-                            label: "AI - 버그",
-                            yAxisId: "left",
-                            strokeDasharray: undefined,
-                            shape: "circle",
-                          },
-                          {
-                            key: "productivity",
-                            team: "AI",
-                            color: "#8b5cf6",
-                            label: "AI - 생산성",
-                            yAxisId: "right",
-                            strokeDasharray: "5 5",
-                            shape: "square",
-                          },
-                        ]}
+                        lines={generateMultiLineConfig(
+                          coffeeConsumptionData,
+                          "cupsPerDay"
+                        )}
                         chartId="coffee-consumption"
                       />
                     </Suspense>
@@ -529,65 +567,10 @@ export default function DashboardPage() {
                         xAxisLabel="스낵 수 (개/일)"
                         leftYAxisLabel="회의불참 횟수"
                         rightYAxisLabel="사기 점수"
-                        lines={[
-                          // Marketing 팀
-                          {
-                            key: "meetingsMissed",
-                            team: "Marketing",
-                            color: "#ef4444",
-                            label: "Marketing - 회의불참",
-                            yAxisId: "left",
-                            strokeDasharray: undefined,
-                            shape: "circle",
-                          },
-                          {
-                            key: "morale",
-                            team: "Marketing",
-                            color: "#ef4444",
-                            label: "Marketing - 사기",
-                            yAxisId: "right",
-                            strokeDasharray: "5 5",
-                            shape: "square",
-                          },
-                          // Sales 팀
-                          {
-                            key: "meetingsMissed",
-                            team: "Sales",
-                            color: "#f59e0b",
-                            label: "Sales - 회의불참",
-                            yAxisId: "left",
-                            strokeDasharray: undefined,
-                            shape: "circle",
-                          },
-                          {
-                            key: "morale",
-                            team: "Sales",
-                            color: "#f59e0b",
-                            label: "Sales - 사기",
-                            yAxisId: "right",
-                            strokeDasharray: "5 5",
-                            shape: "square",
-                          },
-                          // HR 팀
-                          {
-                            key: "meetingsMissed",
-                            team: "HR",
-                            color: "#8b5cf6",
-                            label: "HR - 회의불참",
-                            yAxisId: "left",
-                            strokeDasharray: undefined,
-                            shape: "circle",
-                          },
-                          {
-                            key: "morale",
-                            team: "HR",
-                            color: "#8b5cf6",
-                            label: "HR - 사기",
-                            yAxisId: "right",
-                            strokeDasharray: "5 5",
-                            shape: "square",
-                          },
-                        ]}
+                        lines={generateMultiLineConfig(
+                          snackImpactData,
+                          "snackCount"
+                        )}
                         chartId="snack-impact"
                       />
                     </Suspense>
