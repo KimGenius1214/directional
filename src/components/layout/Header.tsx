@@ -6,7 +6,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { useAuthStore, useThemeStore } from "@/lib/store";
 import { cn } from "@/lib/utils";
 import { Sun, Moon } from "lucide-react";
@@ -35,7 +35,6 @@ function NavItem({ href, label, active }: NavItemProps) {
 
 export default function Header() {
   const pathname = usePathname();
-  const router = useRouter();
   const { isAuthenticated, user, logout } = useAuthStore();
   const { theme, toggleTheme } = useThemeStore();
 
@@ -43,7 +42,6 @@ export default function Header() {
     logout();
     // 현재 페이지가 보호된 경로(/posts)인지 확인
     const isProtectedPath = pathname.startsWith("/posts");
-
     setTimeout(() => {
       if (isProtectedPath) {
         // 보호된 경로에서는 홈으로
