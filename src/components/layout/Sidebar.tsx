@@ -6,7 +6,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { useAuthStore, useThemeStore } from "@/lib/store";
 import { cn } from "@/lib/utils";
 
@@ -36,7 +36,6 @@ function NavItem({ href, icon, label, active }: NavItemProps) {
 
 export default function Sidebar() {
   const pathname = usePathname();
-  const router = useRouter();
   const { isAuthenticated, user, logout } = useAuthStore();
   const { theme, toggleTheme } = useThemeStore();
 

@@ -1,8 +1,12 @@
 /**
  * 게시판 페이지
+ * SSR: 매 요청마다 서버에서 렌더링
  */
 
 "use client";
+
+// SSR: 매 요청마다 서버에서 렌더링
+export const dynamic = "force-dynamic";
 
 import { useState, useCallback } from "react";
 import { useDeletePost } from "@/features/posts/hooks";

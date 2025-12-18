@@ -1,9 +1,13 @@
 /**
  * 대시보드 페이지
  * Suspense와 Lazy Loading으로 최적화
+ * ISR: 60초마다 재생성
  */
 
 "use client";
+
+// ISR: 60초마다 페이지 재생성
+export const revalidate = 60;
 
 import { Suspense, lazy } from "react";
 import { Header } from "@/components/layout";
